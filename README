@@ -1,0 +1,55 @@
+Programaren erabilpenerako baliagarriak izango diren aholku eta iruzkinak aipatuko dira dokumentu honetan.
+
+1- Aurreprozesamendua:
+
+	Metodoak:
+	
+	+ { VOID } bihurketa(String csv_a ,String j_path, String h_path) 
+	
+		-> Deskripzioa: Metodo honek, .csv fitxategi bat .arff formatura bilakatzen du.
+		-> Aurrebaldintzak: --
+		-> Postbaldintzak: Emandako CSV fitxategia ARFF formatura bilakatuko du
+		-> Paramatroak:
+			- String csv_a => Bihurtu nahi den .csv fitxategiaren path // ADB{ /home/andoni/weka/fitx/data.csv }
+			- String j_path => csv_a parametroan pasa den path berbera, baina .arff bukaerarekin // ADB{ /home/andoni/weka/fitx/data.arff }
+			- String h_path => Bihurketaren emaitzaren path-a // ADB{ /home/andoni/weka/datuak/data_bihur.arff } 
+			
+	+ { Instances[] } zatiketa(DataSource datuak)
+	
+		-> Deskripzioa: Datu sorta bat duen ARFF fitxategi bat emanda, stratified hold-out bidez bi multzotan banatuko ditu (train eta dev)
+		-> Aurrebaldintzak: Datu sortak bi instantzia edo gehiago ditu.
+		-> Postbaldintza: Metodoak bi datu sortak (train eta dev) bere barnean dituen array bat itzuliko du.
+		-> Parametroak:
+			- DataSource datuak => DataSource klaseko instantzia, non path-a .arff formatuko fitxategi bat den // ADB{ /home/andoni/weka/datuak/data_bihur.arff }
+			
+	+ { Instances[] } bagOfWords(Instances train_raw, Instances dev_raw, String hiztegi_path)
+	
+		-> Deskripzioa: Emandako bi datu sorta, StringToWordVector-en bitartez BagOfWords formatura bilakatuko ditu.
+		-> Aurrebaldintza: Datu sorta ez dago hutsik.
+		-> Postbaldintza: BagOfWords formatuko bi datu sorta itzuliko ditu array baten barruan (train_bow eta dev_bow).
+		-> Parametroak: 
+			- Instances train_raw => Entrenamendu datu sorta duen Instances klaseko instantzia bera.
+			- Instances dev_raw => Test datu sorta duen Instances klaseko instantzia bera.
+			- String hiztegi_path => Train_raw datu sorta BagOfWords formatura bilakatutakoan lortuko den hiztegia non gorde nahi den.
+			
+	+ { Instances[] } featureSS(Instances train_bow, Instances dev_bow)
+	
+		-> Deskripzioa: Bi datu sorta emanda, hauei Feature Subset Selection-en bidez atributuen hautaketa eta murrizketa aplikatzen die.
+		-> Aurrebaldintza: Atributu bat baino gehiago dituzten datu sortak.
+		-> Postbaldintza: Emandako datu sortentzat atributu optimoen hautaketa eta besteen ezabaketa duten datu sortak itzuliko ditu.
+		-> Parametroak: 
+			- Instances train_bow => FSS aplikatuko nahi zaion entrenamendu datu sorta duen Instances klaseko instantzia bera.
+			- Instances dev_bow => FSS aplikatuko nahi zaion test datu sorta duen Instances klaseko instantzia bera.
+	
+	
+	Main FLUXUA (Aurre.jar): 
+		
+		- ARGUMENTUAK: 
+			+
+			+
+			+ ...
+		
+	
+2- Inferentzia:
+
+3- Ekorketa:
