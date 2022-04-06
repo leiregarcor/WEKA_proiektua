@@ -21,6 +21,8 @@ public class baseline {
 		Instances test = dsTest.getDataSet();
 		test.setClassIndex(test.numAttributes()-1);
 		
+		System.out.println(train.get(5).classAttribute().toString());
+		
 		NaiveBayes nb = new NaiveBayes();
 		nb.buildClassifier(train);
 		

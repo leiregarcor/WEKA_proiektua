@@ -4,11 +4,17 @@ import java.awt.image.ImagingOpException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collections;
 
 import weka.classifiers.Classifier;
 import weka.classifiers.bayes.NaiveBayes;
+import weka.core.Attribute;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
+import weka.core.converters.ArffLoader;
 import weka.core.converters.ArffSaver;
 import weka.core.converters.CSVLoader;
 import weka.core.converters.ConverterUtils.DataSource;
@@ -16,7 +22,9 @@ import weka.filters.Filter;
 import weka.filters.supervised.attribute.AttributeSelection;
 import weka.filters.supervised.instance.StratifiedRemoveFolds;
 import weka.filters.unsupervised.attribute.FixedDictionaryStringToWordVector;
+import weka.filters.unsupervised.attribute.NominalToString;
 import weka.filters.unsupervised.attribute.Remove;
+import weka.filters.unsupervised.attribute.RenameAttribute;
 import weka.filters.unsupervised.attribute.ReplaceWithMissingValue;
 import weka.filters.unsupervised.attribute.StringToWordVector;
 
@@ -32,67 +40,93 @@ public class Aurre {
 		 5- dictionary.txt
 		 6- Dev_BoW
 		*/
-		
 		//train_raw prozesatu
-
+		bihurketa(args[0], args[1], args[2]);
+		ArffLoader aLoader = new ArffLoader();
+		File f = new File(args[1]);
+		aLoader.setFile(f);
+		Instances data = aLoader.getDataSet();
+		data.setClassIndex(data.numAttributes()-1);
+		Instances[] instantziak = zatiketa(data);
+		ArffSaver aSaver = new ArffSaver();
+		aSaver.setInstances(instantziak[0]);
+		File train = new File("/home/aitor/Descargas/train.arff");
+		aSaver.setFile(train);
+		aSaver.writeBatch();
+		Instances[] bowInstantziak = bagOfWords(instantziak[0], instantziak[1], args[3]);
+		aSaver = new ArffSaver();
+		aSaver.setInstances(bowInstantziak[1]);
+		File trainF = new File("/home/aitor/Descargas/devBOW.arff");
+		aSaver.setFile(trainF);
+		aSaver.writeBatch();
+		featureSS(bowInstantziak[0], bowInstantziak[1]);
 		
 	}
 	
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	
 	// -- .csv fitxategi bat .arff-ra bihurtzeko metodoa --
-	public void bihurketa(String csv_a ,String j_path, String h_path) throws IOException {
+	public static void bihurketa(String csv_a ,String j_path, String h_path) throws Exception {
 		//Parametroak:
 		// --> csv_a: .csv fitxategiaren path-a
 		// --> j_path: csv_a-ren path berbera, baina .arff bukaerarekin
 		// --> h_path: bihurturiko .arff-a gorden nahi den path-a
+		Path csvPath = Path.of(csv_a);
+		String csvEdukia = Files.readString(csvPath);
+		String csvEdukiaOna = csvEdukia.replace("'", " ");
+		
+		File csvFile = new File(h_path);		
+		FileWriter fw = new FileWriter(h_path);
+		fw.write(csvEdukiaOna);
+		fw.close();
+		
+		File csvOna = new File(h_path);
+		
 		
 		CSVLoader loader = new CSVLoader();
-		loader.setSource(new File(csv_a));
-		Instances datuSorta = loader.getDataSet();
-		
-		ArffSaver saver = new ArffSaver();
-		saver.setInstances(datuSorta);
-		saver.setFile(new File(j_path));
-		saver.setDestination(new File(h_path));
-		saver.writeBatch();
+        loader.setSource(csvOna);
+        
+
+        Instances data = loader.getDataSet();
+
+        // save as an  ARFF (output file)
+        ArffSaver saver = new ArffSaver();
+        saver.setInstances(data);
+        saver.setFile(new File(j_path));
+       // saver.setDestination(new File(j_path));
+        saver.writeBatch();
+        System.out.println("Arff fitxategia sortu da");
+
 	}
 	
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	
 	// -- Datu sorta osoa, stratified hold-out baten bidez bi multzotan (train eta dev) zatitu --
-	public Instances[] zatiketa(DataSource datuak) throws Exception {
-		//Datuak kargatu
-		Instances data =  datuak.getDataSet();
+	public static Instances[] zatiketa(Instances datuak) throws Exception {
+		
 		//Klasea ezarri? Antes o despues de dividir la data en train y test?
 		//data.setClassIndex(data.numAttributes()-1);
 				
 		//Datuak estratifikatu ???
 		StratifiedRemoveFolds srf = new StratifiedRemoveFolds();
-		srf.setInputFormat(data);
+		srf.setInputFormat(datuak);
 		srf.setInvertSelection(true);
 		srf.setNumFolds(10);
 		srf.setFold(7);
 				
-		Instances train_str = Filter.useFilter(data, srf);
+		Instances train_str = Filter.useFilter(datuak, srf);
 		System.out.println(train_str.size());
 				
 				
 		srf = new StratifiedRemoveFolds();
 				
-		srf.setInputFormat(data);
+		srf.setInputFormat(datuak);
 		srf.setInvertSelection(false);
 		srf.setNumFolds(10);
 		srf.setFold(3);
 				
-		Instances test_str = Filter.useFilter(data, srf);
-		System.out.println(test_str.size());
-				
-		// Klasea ?-rekin ordezkatu
-		ReplaceWithMissingValue rpWithMissingValue = new ReplaceWithMissingValue();
-		rpWithMissingValue.setProbability(1); //Atributuaren balioa beti aldatzeko?
-		//?rpWithMissingValue.setAttributeIndices(Klasea);
-		Instances testDataBlind = Filter.useFilter(test_str, rpWithMissingValue);//?
+		Instances dev_str = Filter.useFilter(datuak, srf);
+		System.out.println(dev_str.size());
 				
 		// Datu sortak (train_str eta testDataBlind) idatzi (args[1] eta args[2]-n)
 		//SerializationHelper.write(args[1], train_str);
@@ -101,24 +135,53 @@ public class Aurre {
 		Instances[] instantziak = new Instances[2];
 		instantziak[0] = train_str;
 		// edo testDataBlind?
-		instantziak[1] = test_str;
+		instantziak[1] = dev_str;
+		System.out.println("Train eta dev sortu egin dira");
 		return instantziak;
 	}
 	
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	
 	// -- Emandako bi multzoak BoW formatura bilakatzen ditu --
-	public Instances[] bagOfWords(Instances train_raw, Instances dev_raw, String hiztegi_path) throws Exception {
+	public static Instances[] bagOfWords(Instances train_raw, Instances dev_raw, String hiztegi_path) throws Exception {
 		
-		train_raw.setClassIndex(0);
 		System.out.println("Train_raw-ren atributu kop: " + train_raw.numAttributes());
+		
+		NominalToString nts = new NominalToString();
+		nts.setAttributeIndexes("6");
+		nts.setInputFormat(train_raw);
+		Instances dataTrainRawStr = Filter.useFilter(train_raw, nts);
+		
+		RenameAttribute ra = new RenameAttribute();
+		ra.setAttributeIndices("2");
+		ra.setReplace("moduleAttr");
+		ra.setInputFormat(dataTrainRawStr);
+		dataTrainRawStr = Filter.useFilter(dataTrainRawStr, ra);
+		
+		ra = new RenameAttribute();
+		ra.setAttributeIndices("3");
+		ra.setReplace("ageAttr");
+		ra.setInputFormat(dataTrainRawStr);
+		dataTrainRawStr = Filter.useFilter(dataTrainRawStr, ra);
+		
+		ra = new RenameAttribute();
+		ra.setAttributeIndices("4");
+		ra.setReplace("siteAttr");
+		ra.setInputFormat(dataTrainRawStr);
+		dataTrainRawStr = Filter.useFilter(dataTrainRawStr, ra);
+		
+		ra = new RenameAttribute();
+		ra.setAttributeIndices("5");
+		ra.setReplace("sexAttr");
+		ra.setInputFormat(dataTrainRawStr);
+		dataTrainRawStr = Filter.useFilter(dataTrainRawStr, ra);
 		
 		StringToWordVector boW = new StringToWordVector();
 		File hiztegiaFile = new File(hiztegi_path);
-		boW.setInputFormat(train_raw); // Seterrak baino lehen edo ondoren?
 		boW.setDictionaryFileToSaveTo(hiztegiaFile);
+		boW.setInputFormat(dataTrainRawStr);
 		
-		Instances train_bow = Filter.useFilter(train_raw, boW);
+		Instances train_bow = Filter.useFilter(dataTrainRawStr, boW);
 		System.out.println("Train_bow-ren atributu kop: " + train_bow.numAttributes());
 		//SerializationHelper.write(args[3], train_bow);
 		
@@ -127,15 +190,43 @@ public class Aurre {
 		System.out.println(" ");
 		//Hiztegia lortu da eta train_bow, orain hiztegiarekin dev_bow lortuko dugu
 		
-		dev_raw.setClassIndex(0);
-		System.out.println("Dev_raw-ren atributu kop: " + dev_raw.numAttributes());
+		nts = new NominalToString();
+		nts.setAttributeIndexes("6");
+		nts.setInputFormat(dev_raw);
+		Instances dataDevRawStr = Filter.useFilter(dev_raw, nts);
+		
+		ra = new RenameAttribute();
+		ra.setAttributeIndices("2");
+		ra.setReplace("moduleAttr");
+		ra.setInputFormat(dataDevRawStr);
+		dataDevRawStr = Filter.useFilter(dataDevRawStr, ra);
+		
+		ra = new RenameAttribute();
+		ra.setAttributeIndices("3");
+		ra.setReplace("ageAttr");
+		ra.setInputFormat(dataDevRawStr);
+		dataDevRawStr = Filter.useFilter(dataDevRawStr, ra);
+		
+		ra = new RenameAttribute();
+		ra.setAttributeIndices("4");
+		ra.setReplace("siteAttr");
+		ra.setInputFormat(dataDevRawStr);
+		dataDevRawStr = Filter.useFilter(dataDevRawStr, ra);
+		
+		ra = new RenameAttribute();
+		ra.setAttributeIndices("5");
+		ra.setReplace("sexAttr");
+		ra.setInputFormat(dataDevRawStr);
+		dataDevRawStr = Filter.useFilter(dataDevRawStr, ra);
+		
+		System.out.println("Dev_raw-ren atributu kop: " + dataDevRawStr.numAttributes());
 
 		FixedDictionaryStringToWordVector fixedBoW = new FixedDictionaryStringToWordVector();
-		File hiztegia = new File(hiztegi_path);
-		fixedBoW.setDictionaryFile(hiztegia);
-		fixedBoW.setInputFormat(dev_raw);
+		fixedBoW.setDictionaryFile(hiztegiaFile);
+		fixedBoW.setInputFormat(dataDevRawStr);
+		
 
-		Instances dev_bow = Filter.useFilter(dev_raw, fixedBoW);
+		Instances dev_bow = Filter.useFilter(dataDevRawStr, fixedBoW);
 		System.out.println("Dev_bow-ren atributu kop: " + dev_bow.numAttributes());
 		//SerializationHelper.write(args[5], dev_bow);
 		
@@ -148,9 +239,9 @@ public class Aurre {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	
 	// -- 
-	public Instances[] featureSS(Instances train_bow, Instances dev_bow) throws Exception {
+	public static void featureSS(Instances train_bow, Instances dev_bow) throws Exception {
 		
-		train_bow.setClassIndex(train_bow.numAttributes()-1);
+		System.out.println(train_bow.classIndex());
 		int preFSS = train_bow.numAttributes();
 		
 		//FSS aplikatu: (Attribute selection edo Ranker)?
@@ -163,17 +254,41 @@ public class Aurre {
 		System.out.println(" ");
 		System.out.println(" FSS aplikatu baino lehen: " + preFSS + " FSS aplikatu ondoren: " + postFSS);
 
-		
+		/*
 		//Train BoW FSS erabiliz bere header-aren bidez dev_BoW_FSS lortu
 		Remove remove = new Remove();
 		remove.setInputFormat(train_bow_fss);
-		Instances dev_bow_fss = Filter.useFilter(train_bow, remove); //Suposatzen da setInputFormat trainarentzat eginda
+		Instances dev_bow_fss = Filter.useFilter(dev_bow, remove); //Suposatzen da setInputFormat trainarentzat eginda
 		//FSS jaso duen train multzoaren atributuak begiratu eta filtroa test-ean erabiltzea bietako atributuak konparatuko
-		//dituela biak berdin utziz ....?¿
+		//dituela biak berdin utziz ....?¿ */
 		
-		Instances[] instantziak = new Instances[2];
-		instantziak[0] = train_bow_fss;
-		instantziak[1] = dev_bow_fss;
-		return instantziak;
+		int[] borratzeko =  new int[dev_bow.numAttributes()-train_bow_fss.numAttributes()];
+		int aux = 0;
+		for(int i=0; i< dev_bow.numAttributes()-1; i++) {
+			Attribute a = Collections.list(dev_bow.enumerateAttributes()).get(i);
+			if(!Collections.list(train_bow_fss.enumerateAttributes()).contains(a)) {
+				borratzeko[aux] = a.index();
+				aux ++;
+			}
+		}
+		
+		Remove remove = new Remove(); 
+		remove.setAttributeIndicesArray(borratzeko);
+		remove.setInputFormat(dev_bow);
+		Instances dev_bow_fss = Filter.useFilter(dev_bow, remove);
+		
+		System.out.println("FSS eginda!");
+		
+		ArffSaver aSaver = new ArffSaver();
+		aSaver.setInstances(train_bow_fss);
+		File trainBF = new File("/home/aitor/Descargas/trainBOWFSS.arff");
+		aSaver.setFile(trainBF);
+		aSaver.writeBatch();
+		aSaver = new ArffSaver();
+		aSaver.setInstances(dev_bow_fss);
+		File devBF = new File("/home/aitor/Descargas/devBOWFSS.arff");
+		aSaver.setFile(devBF);
+		aSaver.writeBatch();
+		System.out.println("Train_BOW_FSS eta Dev_BOW_FSS gorde egin dira!");
 	}
 }
