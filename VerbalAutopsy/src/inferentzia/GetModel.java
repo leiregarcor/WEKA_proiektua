@@ -31,15 +31,18 @@ public class GetModel {
 			
 		Kernel[] kernelak = new Kernel[] {new PolyKernel(),new RBFKernel(),new Puk() };
 		
-		for (Kernel k : kernelak) {
-			SMO model = new SMO();
+		for (Kernel k : kernelak) {			
 			if (k instanceof PolyKernel) {
+				
 				for (double i = 1; i < 6; i++) { // exponentea iteratuko dugu 1-etik 5-era
+					
+					SMO model = new SMO();
+					
 					// kernel konfiguratu
 					k = new PolyKernel();
 					
 					// exponentea aldatu
-					k.setExponent(i);
+					((PolyKernel) k).setExponent(i);
 					
 					// kernel SMO-ri pasatu
 					model.setKernel(k);
@@ -49,7 +52,7 @@ public class GetModel {
 	
 					// ebaluatu 
 					Evaluation ev = new Evaluation(data_BOW_FSS);
-					ev.evaluateModel(model, data_BOW_FSS);
+					ev.evaluateModel(model, dev_BOW_FSS);
 	
 					aux = ev.fMeasure(minclassIndex);
 					//System.out.println("Exponent: " + i + " klase minoritarioaren f-measure: " + aux);
@@ -64,11 +67,13 @@ public class GetModel {
 			}
 			if (k instanceof RBFKernel) {
 				for (double i = 1; i < 6; i++) {
+					SMO model = new SMO();
+					
 					// kernel konfiguratu
 					k = new RBFKernel();
 					
 					//gamma aldatu
-					k.setGamma(i);					
+					((RBFKernel) k).setGamma(i);					
 					
 					// kernel SMO-ri pasatu
 					model.setKernel(k);
@@ -77,7 +82,7 @@ public class GetModel {
 	
 					// ebaluatu 
 					Evaluation ev = new Evaluation(data_BOW_FSS);
-					ev.evaluateModel(model, data_BOW_FSS);
+					ev.evaluateModel(model, dev_BOW_FSS);
 	
 					aux = ev.fMeasure(minclassIndex);
 					//System.out.println("Gamma: " + i + " klase minoritarioaren f-measure: " + aux);
@@ -92,11 +97,14 @@ public class GetModel {
 			}
 			if (k instanceof Puk) {
 				for (double i = 1; i < 6; i++) {
+					
+					SMO model = new SMO();
+					
 					// kernel konfiguratu
 					k = new Puk();
 					
 					//omega aldatu
-					k.setOmega(i);					
+					((Puk) k).setOmega(i);					
 					
 					// kernel SMO-ri pasatu
 					model.setKernel(k);
@@ -106,7 +114,7 @@ public class GetModel {
 	
 					// ebaluatu 
 					Evaluation ev = new Evaluation(data_BOW_FSS);
-					ev.evaluateModel(model, data_BOW_FSS);
+					ev.evaluateModel(model, dev_BOW_FSS);
 	
 					aux = ev.fMeasure(minclassIndex);
 					//System.out.println("Omega: " + i + " klase minoritarioaren f-measure: " + aux);
@@ -125,23 +133,23 @@ public class GetModel {
 		System.out.println("* PARAMETRO OPTIMOAK: ");
 		// behin parameto optimoak lotu direla eredu optimoa gordeko da
 		
-		// 1- modelo optimoa 
+		// modelo optimoa eraiki
 		SMO model = new SMO();
 		Kernel ker = null;
 		
 		if (kernelOpt instanceof PolyKernel) { 
 			System.out.println("Exponent: " + exp + " klase minoritarioaren f-measure: " + aux);
 			ker = new PolyKernel();
-			ker.setExponent(exp);
+			((PolyKernel) ker).setExponent(exp);
 			
 		}else if (kernelOpt instanceof RBFKernel) {
 			System.out.println("Gamma: " + gamma + " klase minoritarioaren f-measure: " + aux);	
 			ker = new RBFKernel();
-			ker.setGamma(gamma);
+			((RBFKernel) ker).setGamma(gamma);
 		}else {
 			System.out.println("Omega: " + omega + " klase minoritarioaren f-measure: " + aux);
 			ker = new Puk();
-			ker.setOmega(omega);	
+			((Puk) ker).setOmega(omega);	
 		}
 		
 		model.setKernel(ker);
@@ -150,14 +158,17 @@ public class GetModel {
 		System.out.println("Eredu optimoa gordetzen**********************");
 		SerializationHelper.write(args[2], model);
 		
-		int classIndex = data_BOW_FSS.classIndex(); 
+		
 
 		// sailkatzailearen kalitatearen estimazioa:
+		
+		Instances train_dev = Instances.mergeInstances(data_BOW_FSS, dev_BOW_FSS);
+		
 			// ebaluazio ez-zintzoa
 		FileWriter writer = new FileWriter(args[3], true);
 		writer.write("\n KALITATEAREN ESTIMAZIOA, ebaluazio ez zintzoa");
-		Evaluation eva = new Evaluation(data_BOW_FSS);
-		eva.evaluateModel(model, data_BOW_FSS);
+		Evaluation eva = new Evaluation(train_dev);
+		eva.evaluateModel(model, train_dev);
 		writer.write("\nKlase minoritarioren f-measure: " + eva.fMeasure(minclassIndex));
 		
 		/*// ondo dagoela frogatzeko
@@ -170,13 +181,12 @@ public class GetModel {
 		
 			// 10-fold cross validation
 		writer.write("\n KALITATEAREN ESTIMAZIOA, 10-fold cross validation ebaluazio eskema");
-		Evaluation eva2 = new Evaluation(data_BOW_FSS);
-		eva2.crossValidateModel(model, data_BOW_FSS, 10, new Random(1));
+		Evaluation eva2 = new Evaluation(train_dev);
+		eva2.crossValidateModel(model, train_dev, 10, new Random(1));
 		writer.write("\nKlase minoritarioren f-measure: " + eva2.fMeasure(minclassIndex));
-
-		// klase minoritarioaren precision recall eta fmeasure :		
-		minclassIndex = weka.core.Utils.minIndex(data_BOW_FSS.attributeStats(classIndex).nominalCounts); // Klasearen frekuentzia minimo duen balioaren indizea
 		
+		
+
 		writer.close();
 
 
