@@ -9,7 +9,6 @@ import weka.core.converters.ConverterUtils.DataSource;
 import java.io.FileWriter;
 import java.util.Random;
 
-
 import weka.classifiers.Evaluation;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.functions.supportVector.Kernel;
@@ -19,6 +18,17 @@ import weka.classifiers.functions.supportVector.RBFKernel;
 
 public class GetModel {
 	public static void inferentzia(Instances data_BOW_FSS, Instances dev_BOW_FSS, String pathModel, String path_kalitate) throws Exception {
+		
+		int minclassIndex = 0; // adib lehenengoa
+		int minClassFreq =  data_BOW_FSS.numInstances(); // balio altuenaerkin hasieratu
+			
+		
+		for(int i=0; i<data_BOW_FSS.attribute(data_BOW_FSS.classIndex()).numValues(); i++){			
+			int classFreq = data_BOW_FSS.attributeStats(data_BOW_FSS.classIndex()).nominalCounts[i];			
+			if (classFreq != 0 && classFreq < minClassFreq) {
+				minclassIndex = i;
+			}			
+		}
 
 		// sailkatzaile optimoa lortu
 		System.out.println("\n Tunning parameters for SMO"); 
@@ -30,7 +40,7 @@ public class GetModel {
 		double omega = 1;
 		Kernel kernelOpt = null;
 
-		int minclassIndex = weka.core.Utils.minIndex(data_BOW_FSS.attributeStats(data_BOW_FSS.classIndex()).nominalCounts); 
+		
 
 		Kernel[] kernelak = new Kernel[] {new PolyKernel(),new RBFKernel(),new Puk() };
 
