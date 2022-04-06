@@ -31,12 +31,22 @@ public class baseline {
 		
 		long endTime   = System.nanoTime();
         long totalTime = endTime - startTime;
-		int minoritarioa = weka.core.Utils.minIndex(train.attributeStats(train.classIndex()).nominalCounts);
+        int minclassIndex = 0; // adib lehenengoa
+		int minClassFreq =  train.numInstances(); // balio altuenaerkin hasieratu
+			
+		
+		for(int i=0; i<train.attribute(train.classIndex()).numValues(); i++){			
+			int classFreq = train.attributeStats(train.classIndex()).nominalCounts[i];			
+			if (classFreq != 0 && classFreq < minClassFreq) {
+				minclassIndex = i;
+			}			
+		}
+	//	int minoritarioa = weka.core.Utils.minIndex(train.attributeStats(train.classIndex()).nominalCounts);
 		
 		FileWriter fw = new FileWriter(args[2]);
 		fw.write("Naive bayes-en exekuzio denbora: " + totalTime/1000000 + " milisegundu.");
 		fw.write("\n");
-		fw.write("Klase minoritarioaren f-measure = " + eval.fMeasure(minoritarioa));
+		fw.write("Klase minoritarioaren f-measure = " + eval.fMeasure(minclassIndex));
 		fw.write("\n");
 		fw.write("Ondo klasifikatutako instantzia ehunekoa: " + eval.pctCorrect());
 		fw.write("\n");
