@@ -19,9 +19,11 @@ import weka.classifiers.functions.supportVector.RBFKernel;
 public class GetModel {
 	public static void inferentzia(Instances data_BOW_FSS, Instances dev_BOW_FSS, String pathModel, String path_kalitate) throws Exception {
 		
+		// Ekorketa burutzeko lehenengo klase minoriatarioa aurkitu behar dugu, hau da, ez 0 direnen artean frekuentzia minimoa duen balioa.
+		// ekorketa klase minoritarioaren f-measure hobetzea du helburu, horretarako kernelak eta hauek behar dituzten parametroak aldatuko dira iterazioetan
+		
 		int minclassIndex = 0; // adib lehenengoa
-		int minClassFreq =  data_BOW_FSS.numInstances(); // balio altuenaerkin hasieratu
-			
+		int minClassFreq =  data_BOW_FSS.numInstances(); // balio altuenaerkin hasieratu			
 		
 		for(int i=0; i<data_BOW_FSS.attribute(data_BOW_FSS.classIndex()).numValues(); i++){			
 			int classFreq = data_BOW_FSS.attributeStats(data_BOW_FSS.classIndex()).nominalCounts[i];			
