@@ -25,6 +25,7 @@ import weka.filters.unsupervised.attribute.FixedDictionaryStringToWordVector;
 import weka.filters.unsupervised.attribute.NominalToString;
 import weka.filters.unsupervised.attribute.Remove;
 import weka.filters.unsupervised.attribute.RenameAttribute;
+import weka.filters.unsupervised.attribute.Reorder;
 import weka.filters.unsupervised.attribute.ReplaceWithMissingValue;
 import weka.filters.unsupervised.attribute.StringToWordVector;
 
@@ -33,12 +34,12 @@ public class Aurre {
 	public static void main(String[] args) throws Exception {
 		
 		/*Argumentuak:
-		 1- Datu sorta osoa
-		 2- Train_raw
-		 3- Dev_raw
-		 4- Train_BoW
-		 5- dictionary.txt
-		 6- Dev_BoW
+		 0- .csv
+		 1- .arff
+		 2- .csv garbia
+		 3- Hiztegia
+		 4- trainBOWFSS
+		 5- DevBOWFSS
 		*/
 		//train_raw prozesatu
 		bihurketa(args[0], args[1], args[2]);
@@ -48,19 +49,19 @@ public class Aurre {
 		Instances data = aLoader.getDataSet();
 		data.setClassIndex(data.numAttributes()-1);
 		Instances[] instantziak = zatiketa(data);
-		ArffSaver aSaver = new ArffSaver();
-		aSaver.setInstances(instantziak[0]);
-		File train = new File("/home/aitor/Descargas/train.arff");
-		aSaver.setFile(train);
-		aSaver.writeBatch();
 		Instances[] bowInstantziak = bagOfWords(instantziak[0], instantziak[1], args[3]);
-		aSaver = new ArffSaver();
-		aSaver.setInstances(bowInstantziak[1]);
-		File trainF = new File("/home/aitor/Descargas/devBOW.arff");
-		aSaver.setFile(trainF);
+		Instances[] bowFssInstantziak = featureSS(bowInstantziak[0], bowInstantziak[1]);
+		ArffSaver aSaver = new ArffSaver();
+		aSaver.setInstances(bowFssInstantziak[0]);
+		File trainBF = new File(args[4]);
+		aSaver.setFile(trainBF);
 		aSaver.writeBatch();
-		featureSS(bowInstantziak[0], bowInstantziak[1]);
-		
+		aSaver = new ArffSaver();
+		aSaver.setInstances(bowFssInstantziak[1]);
+		File devBF = new File(args[5]);
+		aSaver.setFile(devBF);
+		aSaver.writeBatch();
+		System.out.println("Train_BOW_FSS eta Dev_BOW_FSS gorde egin dira!");
 	}
 	
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -239,7 +240,7 @@ public class Aurre {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	
 	// -- 
-	public static void featureSS(Instances train_bow, Instances dev_bow) throws Exception {
+	public static Instances[] featureSS(Instances train_bow, Instances dev_bow) throws Exception {
 		
 		System.out.println(train_bow.classIndex());
 		int preFSS = train_bow.numAttributes();
@@ -261,7 +262,7 @@ public class Aurre {
 		Instances dev_bow_fss = Filter.useFilter(dev_bow, remove); //Suposatzen da setInputFormat trainarentzat eginda
 		//FSS jaso duen train multzoaren atributuak begiratu eta filtroa test-ean erabiltzea bietako atributuak konparatuko
 		//dituela biak berdin utziz ....?¿ */
-		
+		dev_bow.setClassIndex(5);
 		int[] borratzeko =  new int[dev_bow.numAttributes()-train_bow_fss.numAttributes()];
 		int aux = 0;
 		for(int i=0; i< dev_bow.numAttributes()-1; i++) {
@@ -279,16 +280,18 @@ public class Aurre {
 		
 		System.out.println("FSS eginda!");
 		
-		ArffSaver aSaver = new ArffSaver();
-		aSaver.setInstances(train_bow_fss);
-		File trainBF = new File("/home/aitor/Descargas/trainBOWFSS.arff");
-		aSaver.setFile(trainBF);
-		aSaver.writeBatch();
-		aSaver = new ArffSaver();
-		aSaver.setInstances(dev_bow_fss);
-		File devBF = new File("/home/aitor/Descargas/devBOWFSS.arff");
-		aSaver.setFile(devBF);
-		aSaver.writeBatch();
-		System.out.println("Train_BOW_FSS eta Dev_BOW_FSS gorde egin dira!");
+		Reorder order = new Reorder();
+        order.setInputFormat(train_bow_fss);
+        Filter.useFilter(train_bow_fss, order);
+        
+        order = new Reorder();
+        order.setInputFormat(dev_bow_fss);
+        Filter.useFilter(dev_bow_fss, order);
+        
+        Instances[] instantziak = new Instances[2];
+		instantziak[0] = train_bow_fss;
+		instantziak[1] = dev_bow_fss;
+		return instantziak;
+		
 	}
 }
