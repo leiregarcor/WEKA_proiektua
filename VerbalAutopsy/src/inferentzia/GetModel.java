@@ -29,9 +29,10 @@ public class GetModel {
 			int classFreq = data_BOW_FSS.attributeStats(data_BOW_FSS.classIndex()).nominalCounts[i];			
 			if (classFreq != 0 && classFreq < minClassFreq) {
 				minclassIndex = i;
+				minClassFreq = classFreq;
 			}			
 		}
-
+		System.out.println(minclassIndex + "    " + minClassFreq);
 		// sailkatzaile optimoa lortu
 		System.out.println("\n Tunning parameters for SMO"); 
 
@@ -70,7 +71,7 @@ public class GetModel {
 					ev.evaluateModel(model, dev_BOW_FSS);
 
 					aux = ev.fMeasure(minclassIndex);
-					//System.out.println("Exponent: " + i + " klase minoritarioaren f-measure: " + aux);
+					System.out.println("Exponent: " + i + " klase minoritarioaren f-measure: " + aux);
 
 					if (fmeasure < aux) {
 						fmeasure = aux;
@@ -100,8 +101,7 @@ public class GetModel {
 					ev.evaluateModel(model, dev_BOW_FSS);
 
 					aux = ev.fMeasure(minclassIndex);
-					//System.out.println("Gamma: " + i + " klase minoritarioaren f-measure: " + aux);
-
+					System.out.println("Gamma: " + i + " klase minoritarioaren f-measure: " + aux);
 					if (fmeasure < aux) {
 						fmeasure = aux;
 						gamma = i;
@@ -132,7 +132,7 @@ public class GetModel {
 					ev.evaluateModel(model, dev_BOW_FSS);
 
 					aux = ev.fMeasure(minclassIndex);
-					//System.out.println("Omega: " + i + " klase minoritarioaren f-measure: " + aux);
+					System.out.println("Omega: " + i + " klase minoritarioaren f-measure: " + aux);
 
 					if (fmeasure < aux) {
 						fmeasure = aux;
@@ -180,7 +180,7 @@ public class GetModel {
 		train_dev.setClassIndex(train_dev.numAttributes()-1);
 
 		// ebaluazio ez-zintzoa
-		FileWriter writer = new FileWriter(path_kalitate, true);
+		FileWriter writer = new FileWriter(path_kalitate);
 		writer.write("\n KALITATEAREN ESTIMAZIOA, ebaluazio ez zintzoa");
 		Evaluation eva = new Evaluation(train_dev);
 		eva.evaluateModel(model, train_dev);
@@ -220,7 +220,7 @@ public class GetModel {
 		Instances dev = devSource.getDataSet();
 
 		// klasea azken atributua da
-		dev.setClassIndex(4);
+		dev.setClassIndex(dev.numAttributes()-1);
 				
 		inferentzia(train, dev, args[2],args[3]);
 

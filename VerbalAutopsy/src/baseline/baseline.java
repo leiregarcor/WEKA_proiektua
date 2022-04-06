@@ -39,8 +39,10 @@ public class baseline {
 			int classFreq = train.attributeStats(train.classIndex()).nominalCounts[i];			
 			if (classFreq != 0 && classFreq < minClassFreq) {
 				minclassIndex = i;
+				minClassFreq = classFreq;
 			}			
 		}
+		System.out.println(minclassIndex + "      " + minClassFreq);
 	//	int minoritarioa = weka.core.Utils.minIndex(train.attributeStats(train.classIndex()).nominalCounts);
 		
 		FileWriter fw = new FileWriter(args[2]);
