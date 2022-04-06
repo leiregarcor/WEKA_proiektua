@@ -1,11 +1,14 @@
 package inferentzia;
 
+import weka.core.Attribute;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
 import weka.core.converters.ConverterUtils.DataSource;
 
 import java.io.FileWriter;
 import java.util.Random;
+
 
 import weka.classifiers.Evaluation;
 import weka.classifiers.functions.SMO;
@@ -162,7 +165,7 @@ public class GetModel {
 
 		// sailkatzailearen kalitatearen estimazioa:
 
-		Instances train_dev = Instances.mergeInstances(data_BOW_FSS, dev_BOW_FSS);
+		Instances train_dev = merge(data_BOW_FSS, dev_BOW_FSS);
 
 		// ebaluazio ez-zintzoa
 		FileWriter writer = new FileWriter(path_kalitate, true);
@@ -211,5 +214,41 @@ public class GetModel {
 
 
 	}
+	
+	public static Instances merge(Instances data1, Instances data2)
+            throws Exception
+        {
+            // Check where are the string attributes
+            int asize = data1.numAttributes();
+            boolean strings_pos[] = new boolean[asize];
+            for(int i=0; i<asize; i++)
+            {
+                Attribute att = data1.attribute(i);
+                strings_pos[i] = ((att.type() == Attribute.STRING) ||
+                                  (att.type() == Attribute.NOMINAL));
+            }
+
+            // Create a new dataset
+            Instances dest = new Instances(data1);
+            dest.setRelationName(data1.relationName() + "+" + data2.relationName());
+
+            DataSource source = new DataSource(data2);
+            Instances instances = source.getStructure();
+            Instance instance = null;
+            while (source.hasMoreElements(instances)) {
+                instance = source.nextElement(instances);
+                dest.add(instance);
+
+                // Copy string attributes
+                for(int i=0; i<asize; i++) {
+                    if(strings_pos[i]) {
+                        dest.instance(dest.numInstances()-1)
+                            .setValue(i,instance.stringValue(i));
+                    }
+                }
+            }
+
+            return dest;
+        }
 
 }
