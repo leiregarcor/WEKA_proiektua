@@ -176,8 +176,8 @@ public class GetModel {
 
 
 		// sailkatzailearen kalitatearen estimazioa:
-
 		Instances train_dev = merge(data_BOW_FSS, dev_BOW_FSS);
+		train_dev.setClassIndex(train_dev.numAttributes()-1);
 
 		// ebaluazio ez-zintzoa
 		FileWriter writer = new FileWriter(path_kalitate, true);
@@ -231,6 +231,7 @@ public class GetModel {
             throws Exception
         {
             // Check where are the string attributes
+			System.out.println("Instantziak mergeatzen");
             int asize = data1.numAttributes();
             boolean strings_pos[] = new boolean[asize];
             for(int i=0; i<asize; i++)
@@ -259,7 +260,7 @@ public class GetModel {
                     }
                 }
             }
-
+            System.out.println("Instantziak mergeatuta");
             return dest;
         }
 

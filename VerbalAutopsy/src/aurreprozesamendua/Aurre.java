@@ -281,12 +281,9 @@ public class Aurre {
 		System.out.println("FSS eginda!");
 		
 		Reorder order = new Reorder();
-        order.setInputFormat(train_bow_fss);
-        Filter.useFilter(train_bow_fss, order);
-        
-        order = new Reorder();
+		order.setAttributeIndices("first-4,6-last,5");
         order.setInputFormat(dev_bow_fss);
-        Filter.useFilter(dev_bow_fss, order);
+        dev_bow_fss = Filter.useFilter(dev_bow_fss, order);
         
         Instances[] instantziak = new Instances[2];
 		instantziak[0] = train_bow_fss;

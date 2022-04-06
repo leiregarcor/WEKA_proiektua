@@ -20,7 +20,7 @@ public class baseline {
 		train.setClassIndex(train.numAttributes()-1);
 		DataSource dsTest = new DataSource(args[1]);
 		Instances test = dsTest.getDataSet();
-		test.setClassIndex(4);
+		test.setClassIndex(test.numAttributes()-1);
 		
 		NaiveBayes nb = new NaiveBayes();
 		nb.buildClassifier(train);
