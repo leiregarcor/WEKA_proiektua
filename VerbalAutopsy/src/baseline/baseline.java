@@ -6,6 +6,7 @@ import com.googlecode.jfilechooserbookmarks.core.Utils;
 
 import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
+import weka.classifiers.evaluation.Prediction;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 
@@ -19,7 +20,7 @@ public class baseline {
 		train.setClassIndex(train.numAttributes()-1);
 		DataSource dsTest = new DataSource(args[1]);
 		Instances test = dsTest.getDataSet();
-		test.setClassIndex(5);
+		test.setClassIndex(4);
 		
 		NaiveBayes nb = new NaiveBayes();
 		nb.buildClassifier(train);
@@ -34,7 +35,6 @@ public class baseline {
 		
 		FileWriter fw = new FileWriter(args[2]);
 		fw.write("Naive bayes-en exekuzio denbora: " + totalTime/1000000 + " milisegundu.");
-		
 		fw.write("\n");
 		fw.write("Klase minoritarioaren f-measure = " + eval.fMeasure(minoritarioa));
 		fw.write("\n");
@@ -42,6 +42,15 @@ public class baseline {
 		fw.write("\n");
 		fw.write(eval.toMatrixString());
 		fw.close();
+		
+		FileWriter fw2 = new FileWriter(args[3]);
+		fw2.write("Naive Bayes-en iragarpenak:");
+		int instantzia = 1;
+		for (Prediction p :eval.predictions()) {
+            fw2.write("\n" + instantzia + " Actual value: " + test.get(instantzia-1).classValue() + ", predicted: " + p.predicted());
+            instantzia++;
+        }
+		fw2.close();
 
 	}
 
