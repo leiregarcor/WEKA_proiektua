@@ -45,6 +45,8 @@ public class baseline {
 		System.out.println(minclassIndex + "      " + minClassFreq);
 	//	int minoritarioa = weka.core.Utils.minIndex(train.attributeStats(train.classIndex()).nominalCounts);
 		
+		minclassIndex = 37;
+		
 		FileWriter fw = new FileWriter(args[2]);
 		fw.write("Naive bayes-en exekuzio denbora: " + totalTime/1000000 + " milisegundu.");
 		fw.write("\n");

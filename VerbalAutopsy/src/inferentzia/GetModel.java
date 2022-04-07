@@ -4,8 +4,14 @@ import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
+import weka.core.converters.ArffLoader;
 import weka.core.converters.ConverterUtils.DataSource;
+import weka.filters.Filter;
+import weka.filters.unsupervised.attribute.FixedDictionaryStringToWordVector;
+import weka.filters.unsupervised.attribute.NominalToString;
+import weka.filters.unsupervised.attribute.RenameAttribute;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.util.Random;
 
@@ -17,7 +23,7 @@ import weka.classifiers.functions.supportVector.Puk;
 import weka.classifiers.functions.supportVector.RBFKernel;
 
 public class GetModel {
-	public static void inferentzia(Instances data_BOW_FSS, Instances dev_BOW_FSS, String pathModel, String path_kalitate) throws Exception {
+	public static void inferentzia(Instances data_BOW_FSS, Instances dev_BOW_FSS, String pathModel, String path_kalitate, String pathData, String pathHiztegia) throws Exception {
 		
 		// Ekorketa burutzeko lehenengo klase minoriatarioa aurkitu behar dugu, hau da, ez 0 direnen artean frekuentzia minimoa duen balioa.
 		// ekorketa klase minoritarioaren f-measure hobetzea du helburu, horretarako kernelak eta hauek behar dituzten parametroak aldatuko dira iterazioetan
@@ -35,6 +41,7 @@ public class GetModel {
 		System.out.println(minclassIndex + "    " + minClassFreq);
 		// sailkatzaile optimoa lortu
 		System.out.println("\n Tunning parameters for SMO"); 
+		minclassIndex = 37;
 
 		double fmeasure = 0.0;
 		double aux = 0.0;
@@ -71,7 +78,6 @@ public class GetModel {
 					ev.evaluateModel(model, dev_BOW_FSS);
 
 					aux = ev.fMeasure(minclassIndex);
-					System.out.println("Exponent: " + i + " klase minoritarioaren f-measure: " + aux);
 
 					if (fmeasure < aux) {
 						fmeasure = aux;
@@ -101,7 +107,6 @@ public class GetModel {
 					ev.evaluateModel(model, dev_BOW_FSS);
 
 					aux = ev.fMeasure(minclassIndex);
-					System.out.println("Gamma: " + i + " klase minoritarioaren f-measure: " + aux);
 					if (fmeasure < aux) {
 						fmeasure = aux;
 						gamma = i;
@@ -132,7 +137,6 @@ public class GetModel {
 					ev.evaluateModel(model, dev_BOW_FSS);
 
 					aux = ev.fMeasure(minclassIndex);
-					System.out.println("Omega: " + i + " klase minoritarioaren f-measure: " + aux);
 
 					if (fmeasure < aux) {
 						fmeasure = aux;
@@ -176,16 +180,63 @@ public class GetModel {
 
 
 		// sailkatzailearen kalitatearen estimazioa:
-		Instances train_dev = merge(data_BOW_FSS, dev_BOW_FSS);
+		// train_dev = merge(data_BOW_FSS, dev_BOW_FSS);
+		DataSource dSource = new DataSource(pathData);
+		Instances train_dev = dSource.getDataSet();
 		train_dev.setClassIndex(train_dev.numAttributes()-1);
+		
+		NominalToString nts = new NominalToString();
+		nts.setAttributeIndexes("6");
+		nts.setInputFormat(train_dev);
+		train_dev = Filter.useFilter(train_dev, nts);
+		
+		RenameAttribute ra = new RenameAttribute();
+		ra.setAttributeIndices("2");
+		ra.setReplace("moduleAttr");
+		ra.setInputFormat(train_dev);
+		train_dev = Filter.useFilter(train_dev, ra);
+		
+		ra = new RenameAttribute();
+		ra.setAttributeIndices("3");
+		ra.setReplace("ageAttr");
+		ra.setInputFormat(train_dev);
+		train_dev = Filter.useFilter(train_dev, ra);
+		
+		ra = new RenameAttribute();
+		ra.setAttributeIndices("4");
+		ra.setReplace("siteAttr");
+		ra.setInputFormat(train_dev);
+		train_dev = Filter.useFilter(train_dev, ra);
+		
+		ra = new RenameAttribute();
+		ra.setAttributeIndices("5");
+		ra.setReplace("sexAttr");
+		ra.setInputFormat(train_dev);
+		train_dev = Filter.useFilter(train_dev, ra);
+		
+		
+		FixedDictionaryStringToWordVector fds = new FixedDictionaryStringToWordVector();
+		File hiztegiBerria = new File(pathHiztegia);
+		fds.setDictionaryFile(hiztegiBerria);
+		fds.setInputFormat(train_dev);
+		
+
+		train_dev = Filter.useFilter(train_dev, fds);
+		System.out.println("Dev_bow_fss-ren atributu kop: " + train_dev.numAttributes());
+		
+		model = new SMO();
+		model.setKernel(ker);
+		model.buildClassifier(train_dev);
 
 		// ebaluazio ez-zintzoa
+		System.out.println("Ebaluazio ez-zintzoa");
 		FileWriter writer = new FileWriter(path_kalitate);
 		writer.write("\n KALITATEAREN ESTIMAZIOA, ebaluazio ez zintzoa");
 		Evaluation eva = new Evaluation(train_dev);
 		eva.evaluateModel(model, train_dev);
 		writer.write("\nKlase minoritarioren f-measure: " + eva.fMeasure(minclassIndex));
-
+		writer.write("\nOndo klasifikatutako instantzia ehunekoa: " + eva.pctCorrect());
+		System.out.println("Ebaluazio ez-zintzoa bukatuta");
 		/*// ondo dagoela frogatzeko
 		writer.write("\n frogatzeko ondo dagoela:");
 		writer.write(eva.toClassDetailsString());
@@ -195,15 +246,18 @@ public class GetModel {
 		 */
 
 		// 10-fold cross validation
+		System.out.println("10 fold cross-validation");
 		writer.write("\n KALITATEAREN ESTIMAZIOA, 10-fold cross validation ebaluazio eskema");
 		Evaluation eva2 = new Evaluation(train_dev);
 		eva2.crossValidateModel(model, train_dev, 10, new Random(1));
 		writer.write("\nKlase minoritarioren f-measure: " + eva2.fMeasure(minclassIndex));
-
+		writer.write("\nOndo klasifikatutako instantzia ehunekoa: " + eva2.pctCorrect());
+		System.out.println("10 fold cross-validation bukatuta");
 
 
 		writer.close();
-
+		System.out.println("Ebaluazioa eginda eta idatzita.");
+		System.exit(0);
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -222,7 +276,7 @@ public class GetModel {
 		// klasea azken atributua da
 		dev.setClassIndex(dev.numAttributes()-1);
 				
-		inferentzia(train, dev, args[2],args[3]);
+		inferentzia(train, dev, args[2],args[3], args[4], args[5]);
 
 
 	}
