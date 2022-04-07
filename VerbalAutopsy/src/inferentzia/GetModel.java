@@ -204,8 +204,9 @@ public class GetModel {
 			((Puk) ker).setOmega(omega);	
 		}
 
-		// sailkatzailearen kalitatearen estimazioa:
-		// train_dev = merge(data_BOW_FSS, dev_BOW_FSS);
+		// sailkatzailearen kalitatearen estimazioa egiteko train eta dev batera dituen dataset-a erabiliko da
+		// kalitatearen estimazioa egiteko ebaluaketa ez zintzoa eginez goi-bornea lortuko da, gero 10-fold cv ere egingo da.
+		
 		DataSource dSource = new DataSource(pathData);
 		Instances train_dev = dSource.getDataSet();
 		train_dev.setClassIndex(train_dev.numAttributes()-1);
@@ -267,13 +268,7 @@ public class GetModel {
 		writer.write("\nKlase minoritarioren f-measure: " + eva.fMeasure(minclassIndex));
 		writer.write("\nOndo klasifikatutako instantzia ehunekoa: " + eva.pctCorrect());
 		System.out.println("Ebaluazio ez-zintzoa bukatuta");
-		/*// ondo dagoela frogatzeko
-		writer.write("\n frogatzeko ondo dagoela:");
-		writer.write(eva.toClassDetailsString());
 
-		// nahasmen matrizea
-		writer.write(eva.toMatrixString());	
-		 */
 
 		// 10-fold cross validation
 		System.out.println("10 fold cross-validation");
