@@ -110,11 +110,6 @@ public class Aurre {
 	
 	// -- Datu sorta osoa, stratified hold-out baten bidez bi multzotan (train eta dev) zatitu --
 	public static Instances[] zatiketa(Instances datuak) throws Exception {
-		
-		//Klasea ezarri? Antes o despues de dividir la data en train y test?
-		//data.setClassIndex(data.numAttributes()-1);
-				
-		//Datuak estratifikatu ???
 		StratifiedRemoveFolds srf = new StratifiedRemoveFolds();
 		srf.setInputFormat(datuak);
 		srf.setInvertSelection(true);
@@ -250,28 +245,6 @@ public class Aurre {
 		e.printStackTrace();  
 		}
 		fWriter.close();
-		/*
-		//Train BoW FSS erabiliz bere header-aren bidez dev_BoW_FSS lortu
-		Remove remove = new Remove();
-		remove.setInputFormat(train_bow_fss);
-		Instances dev_bow_fss = Filter.useFilter(dev_bow, remove); //Suposatzen da setInputFormat trainarentzat eginda
-		//FSS jaso duen train multzoaren atributuak begiratu eta filtroa test-ean erabiltzea bietako atributuak konparatuko
-		//dituela biak berdin utziz ....?¿ */
-		/*dev_bow.setClassIndex(5);
-		int[] borratzeko =  new int[dev_bow.numAttributes()-train_bow_fss.numAttributes()];
-		int aux = 0;
-		for(int i=0; i< dev_bow.numAttributes()-1; i++) {
-			Attribute a = Collections.list(dev_bow.enumerateAttributes()).get(i);
-			if(!Collections.list(train_bow_fss.enumerateAttributes()).contains(a)) {
-				borratzeko[aux] = a.index();
-				aux ++;
-			}
-		}
-		
-		Remove remove = new Remove(); 
-		remove.setAttributeIndicesArray(borratzeko);
-		remove.setInputFormat(dev_bow);
-		Instances dev_bow_fss = Filter.useFilter(dev_bow, remove);*/
 		
 		NominalToString nts = new NominalToString();
 		nts.setAttributeIndexes("6");

@@ -15,6 +15,14 @@ public class baseline {
 	static long startTime = System.nanoTime();
 
 	public static void main(String[] args) throws Exception {
+		
+		/*Argumentuak:
+		 0- trainBOWFSS
+		 1- DevBOWFSS
+		 2- evaluation.txt
+		 3- predictions.txt
+		*/		
+		
 		DataSource dsTrain = new DataSource(args[0]);
 		Instances train = dsTrain.getDataSet();
 		train.setClassIndex(train.numAttributes()-1);

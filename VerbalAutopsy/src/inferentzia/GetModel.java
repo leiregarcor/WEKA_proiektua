@@ -10,6 +10,7 @@ import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.FixedDictionaryStringToWordVector;
 import weka.filters.unsupervised.attribute.NominalToString;
 import weka.filters.unsupervised.attribute.RenameAttribute;
+import weka.filters.unsupervised.attribute.Reorder;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -23,6 +24,36 @@ import weka.classifiers.functions.supportVector.Puk;
 import weka.classifiers.functions.supportVector.RBFKernel;
 
 public class GetModel {
+	public static void main(String[] args) throws Exception {
+		
+		/*Argumentuak:
+		 0- trainBOWFSS
+		 1- DevBOWFSS
+		 2- .model
+		 3- evaluation.txt
+		 4- data.arff
+		 5- Hiztegi FSS
+		*/
+		
+		// fitx kargatu
+		DataSource trainSource = new DataSource(args[0]);
+		Instances train = trainSource.getDataSet();
+
+		// klasea azken atributua da
+		train.setClassIndex(train.numAttributes()-1);
+
+		// fitx kargatu
+		DataSource devSource = new DataSource(args[1]);
+		Instances dev = devSource.getDataSet();
+
+		// klasea azken atributua da
+		dev.setClassIndex(dev.numAttributes()-1);
+				
+		inferentzia(train, dev, args[2],args[3], args[4], args[5]);
+
+
+	}
+	
 	public static void inferentzia(Instances data_BOW_FSS, Instances dev_BOW_FSS, String pathModel, String path_kalitate, String pathData, String pathHiztegia) throws Exception {
 		
 		// Ekorketa burutzeko lehenengo klase minoriatarioa aurkitu behar dugu, hau da, ez 0 direnen artean frekuentzia minimoa duen balioa.
@@ -171,14 +202,6 @@ public class GetModel {
 			((Puk) ker).setOmega(omega);	
 		}
 
-		model.setKernel(ker);
-		model.buildClassifier(data_BOW_FSS);
-
-		System.out.println("Eredu optimoa gordetzen**********************");
-		SerializationHelper.write(pathModel, model);
-
-
-
 		// sailkatzailearen kalitatearen estimazioa:
 		// train_dev = merge(data_BOW_FSS, dev_BOW_FSS);
 		DataSource dSource = new DataSource(pathData);
@@ -212,8 +235,7 @@ public class GetModel {
 		ra.setAttributeIndices("5");
 		ra.setReplace("sexAttr");
 		ra.setInputFormat(train_dev);
-		train_dev = Filter.useFilter(train_dev, ra);
-		
+		train_dev = Filter.useFilter(train_dev, ra);		
 		
 		FixedDictionaryStringToWordVector fds = new FixedDictionaryStringToWordVector();
 		File hiztegiBerria = new File(pathHiztegia);
@@ -222,7 +244,13 @@ public class GetModel {
 		
 
 		train_dev = Filter.useFilter(train_dev, fds);
-		System.out.println("Dev_bow_fss-ren atributu kop: " + train_dev.numAttributes());
+		System.out.println("train_dev-ren atributu kop: " + train_dev.numAttributes());
+		
+		
+		Reorder order = new Reorder();
+		order.setAttributeIndices("3,2,7,5,first,8-14,4,15-last,6");
+        order.setInputFormat(train_dev);
+        train_dev = Filter.useFilter(train_dev, order);
 		
 		model = new SMO();
 		model.setKernel(ker);
@@ -257,28 +285,10 @@ public class GetModel {
 
 		writer.close();
 		System.out.println("Ebaluazioa eginda eta idatzita.");
-		System.exit(0);
-	}
-
-	public static void main(String[] args) throws Exception {
 		
-		// fitx kargatu
-		DataSource trainSource = new DataSource(args[0]);
-		Instances train = trainSource.getDataSet();
-
-		// klasea azken atributua da
-		train.setClassIndex(train.numAttributes()-1);
-
-		// fitx kargatu
-		DataSource devSource = new DataSource(args[1]);
-		Instances dev = devSource.getDataSet();
-
-		// klasea azken atributua da
-		dev.setClassIndex(dev.numAttributes()-1);
-				
-		inferentzia(train, dev, args[2],args[3], args[4], args[5]);
-
-
+		System.out.println("Eredu optimoa gordetzen**********************");
+		SerializationHelper.write(pathModel, model);
+		System.exit(0);
 	}
 	
 	public static Instances merge(Instances data1, Instances data2)
