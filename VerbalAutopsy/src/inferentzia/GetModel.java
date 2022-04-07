@@ -109,7 +109,7 @@ public class GetModel {
 					ev.evaluateModel(model, dev_BOW_FSS);
 
 					aux = ev.fMeasure(minclassIndex);
-
+					System.out.println("exponentea: " + i + "; fmeasure: " + aux);
 					if (fmeasure < aux) {
 						fmeasure = aux;
 						exp = i;
@@ -138,6 +138,7 @@ public class GetModel {
 					ev.evaluateModel(model, dev_BOW_FSS);
 
 					aux = ev.fMeasure(minclassIndex);
+					System.out.println("gamma: " + i + "; fmeasure: " + aux);
 					if (fmeasure < aux) {
 						fmeasure = aux;
 						gamma = i;
@@ -168,6 +169,7 @@ public class GetModel {
 					ev.evaluateModel(model, dev_BOW_FSS);
 
 					aux = ev.fMeasure(minclassIndex);
+					System.out.println("omega: " + i + "; fmeasure: " + aux);
 
 					if (fmeasure < aux) {
 						fmeasure = aux;
@@ -277,7 +279,7 @@ public class GetModel {
 		System.out.println("10 fold cross-validation");
 		writer.write("\n KALITATEAREN ESTIMAZIOA, 10-fold cross validation ebaluazio eskema");
 		Evaluation eva2 = new Evaluation(train_dev);
-		eva2.crossValidateModel(model, train_dev, 5, new Random(1));
+		eva2.crossValidateModel(model, train_dev, 10, new Random(1));
 		writer.write("\nKlase minoritarioren f-measure: " + eva2.fMeasure(minclassIndex));
 		writer.write("\nOndo klasifikatutako instantzia ehunekoa: " + eva2.pctCorrect());
 		System.out.println("10 fold cross-validation bukatuta");

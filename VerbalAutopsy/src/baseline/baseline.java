@@ -73,7 +73,7 @@ public class baseline {
             instantzia++;
         }
 		fw2.close();
-
+		System.exit(0);
 	}
 
 }
