@@ -277,7 +277,7 @@ public class GetModel {
 		System.out.println("10 fold cross-validation");
 		writer.write("\n KALITATEAREN ESTIMAZIOA, 10-fold cross validation ebaluazio eskema");
 		Evaluation eva2 = new Evaluation(train_dev);
-		eva2.crossValidateModel(model, train_dev, 10, new Random(1));
+		eva2.crossValidateModel(model, train_dev, 5, new Random(1));
 		writer.write("\nKlase minoritarioren f-measure: " + eva2.fMeasure(minclassIndex));
 		writer.write("\nOndo klasifikatutako instantzia ehunekoa: " + eva2.pctCorrect());
 		System.out.println("10 fold cross-validation bukatuta");
