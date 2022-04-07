@@ -14,42 +14,114 @@ Programaren erabilpenerako baliagarriak izango diren aholku eta iruzkinak aipatu
 			- String j_path => csv_a parametroan pasa den path berbera, baina .arff bukaerarekin // ADB{ /home/andoni/weka/fitx/data.arff }
 			- String h_path => Bihurketaren emaitzaren path-a // ADB{ /home/andoni/weka/datuak/data_bihur.arff } 
 			
-	+ { Instances[] } zatiketa(DataSource datuak)
+	+ { Instances[] } zatiketa(Instances datuak)
 	
-		-> Deskripzioa: Datu sorta bat duen ARFF fitxategi bat emanda, stratified hold-out bidez bi multzotan banatuko ditu (train eta dev)
+		-> Deskripzioa: Datu sorta bat duen Instances klaseko instantzia bat emanda, stratified hold-out bidez bi multzotan banatuko ditu (train eta dev).
 		-> Aurrebaldintzak: Datu sortak bi instantzia edo gehiago ditu.
 		-> Postbaldintza: Metodoak bi datu sortak (train eta dev) bere barnean dituen array bat itzuliko du.
 		-> Parametroak:
-			- DataSource datuak => DataSource klaseko instantzia, non path-a .arff formatuko fitxategi bat den // ADB{ /home/andoni/weka/datuak/data_bihur.arff }
+			- Instances datuak => Instances klaseko instantzia, non path-a .arff formatuko fitxategi bat den // ADB{ /home/andoni/weka/datuak/data_bihur.arff }
 			
-	+ { Instances[] } bagOfWords(Instances train_raw, Instances dev_raw, String hiztegi_path)
+	+ { Instances } bagOfWords(Instances train_raw, String hiztegi_path)
 	
-		-> Deskripzioa: Emandako bi datu sorta, StringToWordVector-en bitartez BagOfWords formatura bilakatuko ditu.
+		-> Deskripzioa: Emandako datu sorta, StringToWordVector-en bitartez BagOfWords formatura bilakatuko eta honen hiztegia emandako path-ean gordeko du.
+			Datu sortan arazoak sortzen zituzten nominalak string-era bilakatuz eta atributu errepikatuak berrizendatuko ditu ere (module, sex ... ).
 		-> Aurrebaldintza: Datu sorta ez dago hutsik.
-		-> Postbaldintza: BagOfWords formatuko bi datu sorta itzuliko ditu array baten barruan (train_bow eta dev_bow).
+		-> Postbaldintza: BagOfWords formatuko datu sorta itzuliko du eta emandako path-ean honen hiztegia gordeko da.
 		-> Parametroak: 
 			- Instances train_raw => Entrenamendu datu sorta duen Instances klaseko instantzia bera.
-			- Instances dev_raw => Test datu sorta duen Instances klaseko instantzia bera.
 			- String hiztegi_path => Train_raw datu sorta BagOfWords formatura bilakatutakoan lortuko den hiztegia non gorde nahi den.
 			
-	+ { Instances[] } featureSS(Instances train_bow, Instances dev_bow)
+	+ { Instances[] } featureSS(Instances train_bow, Instances dev_raw, String hiztegia, String hiztegiberria)
 	
-		-> Deskripzioa: Bi datu sorta emanda, hauei Feature Subset Selection-en bidez atributuen hautaketa eta murrizketa aplikatzen die.
+		-> Deskripzioa: Bi datu-sorta emanda, lehenik train_bow-ri FSS aplikatuko zaio ebaluatzaile gisa InfoGain ezarriz. Behin train_bow_fss lortuta, honen
+			atributuak hiztegia path-ean emandakoarekin konparatuko da, fitxategia bilakatuz. Hau da, hiztegitik FSS ostean train_bow_fss-en dauden atributuak
+			soilik utzita bere barnean. Horrela, dev_raw FixedStringToWordVector bitartez hiztegiberria-rekin, bag of words formatura bilakatuko dugu, eta
+			AttributeSelection ere dagoeneko eginda. Bukaeran, BoW eta FSS jasan duten bi datu sortak itzuliko dira.
 		-> Aurrebaldintza: Atributu bat baino gehiago dituzten datu sortak.
 		-> Postbaldintza: Emandako datu sortentzat atributu optimoen hautaketa eta besteen ezabaketa duten datu sortak itzuliko ditu.
 		-> Parametroak: 
-			- Instances train_bow => FSS aplikatuko nahi zaion entrenamendu datu sorta duen Instances klaseko instantzia bera.
-			- Instances dev_bow => FSS aplikatuko nahi zaion test datu sorta duen Instances klaseko instantzia bera.
+			- Instances train_bow => FSS aplikatuko nahi zaion entrenamendu datu-sorta duen Instances klaseko instantzia bera.
+			- Instances dev_raw => BoW eta FSS aplikatuko nahi zaion test datu sorta duen Instances klaseko instantzia bera.
+			- String hiztegia => train_bow-tik lorturiko hiztegiaren path-a.
+			- String hiztegiBerria => dev_raw-ko datuak BoW formatura bilakatzeko erabiliko den hiztegia non gordeko den adierazten duen path-a.
 	
 	
 	Main FLUXUA (Aurre.jar): 
 		
 		- ARGUMENTUAK: 
-			+
-			+
-			+ ...
+			0- csv_orginala // .csv fitxategiaren path-a
+		 	1- arff_fitx // .arff fitxategia non gorde nahi den
+		 	2- csv_garbi // .csv garbia non gorde nahi den
+			3- hiztegi // Hiztegia non gorde nahi den
+			4- train_bow_fss // BoW eta FSS jasandako train datu_sorta non gorde
+		 	5- dev_bow_fss // BoW eta FSS jasandako dev datu_sorta non gorde
+		 	6- hizt_berri // train_bow_fss-ri egokituriko hiztegia non gorde nahi den
 		
-	
+		- FLUXUA:
+			Hasteko bihurketa() metoadri deituko zaio csv_orginala, csv_garbi-ra bilakatzeko eta hau arff formatuko arff_fitx path-ean gordetzeko. Ondoren,
+			arff_fitx-eko datu-sorta kargatuko dat Instances motako instantzia batean erabilgarri egoteko, eta jarrain, zatiketa() metodoaren bidez bitan
+			zatituko da arff_fitx. Lorturiko train instantzia, bagOfWords() metodoari pasako zaio hiztegi path-arekin batera, eta honen bidez StringToWordVector
+			aplikatuko zaio. Jarraian, featureSS() metodoa deituko da eta honi, aurreko deitik lortutako train_bow, zatiketatik lortutako dev_raw, hiztegi eta
+			hizt_berri pasako zaizkio. Honela, bi datu sortak BoW eta FSS jasango dute, azkeniko emandako path-etan gorde ahal izateko.
+		
+		
 2- Inferentzia:
 
+	Main FLUXUA (sailkapena.jar): 
+		
+		- ARGUMENTUAK: 
+			0- .model // modeloa non gordeko den
+			1- testBlind.csv // testblind csv fitxategiaren path-a
+		 	2- predictions.txt // iragarpenak non gordeko diren
+		 	3- HiztegiaFSS // testblind-i bihurketa egiteko hiztegiaren path-a
+		 	4- testBlind.arff // bilakatutako fitxategia non gordeko den
+		 	5- testBlindGarbia.csv // garbituriko CSV fitxategia non gorde
+		
+		- FLUXUA:
+			Hasteko, testblind aurreprozesamenduko bihurketa() metodoaren bidez ARFF formatura bilakatuko da. Jarraian, .arff fitxategi hau Instances klaseko
+			instantzia baten bidez, eta argumentuetatik lortutako hiztegiaren bidez, BoW eta FSS aplikatuko zaio eta honekin iragarpenak egingo dira emaitzak gordez.
+			Horretaz gain, datu-sortak zekarren arazoak sahiesteko hainbat atributu berrizendatuko dira.
+
+
 3- Ekorketa:
+
+	Metodoak:
+
+	+ { VOID } inferentzia(Instances data_BOW_FSS, Instances dev_BOW_FSS, String pathModel, String path_kalitate, String pathData, String pathHiztegia)
+		
+		-> Deskripzioa: Metodo honen bidez, datu-sortako klase minoritarioa topatuko da lehenik klase ezberdinen maiztasunak beatuz. Hau, ekorketa klase
+			minoritarioaren f-measurearekiko egingo delako da. Irizpide honen bidez, kernel ezberdinen eta hauek erabiltzen dituzten parametroen artean
+			ekorketa prozesu bat emango da balio optimoak topatzeko. Optimo hauek lortutakoan modeloa, kalitatearen estimazioa eta datu ezberdinak gordeko dira.
+		-> Aurrebaldintzak: --
+		-> Postbaldintzak: Balio optimoak topatuko dira emandako datuentzat, modeloa eta kalitatearen estimazio gordez.
+		-> Paramatroak:
+			- data_BOW_FSS => Train datu-sorta instantzia 
+			- dev_BOW_FSS => Dev datu_sorta instanzia
+			- pathModel => Modeloa non gorde nahi den adierazten duen path-a
+			- path_kalitate => Kalitatearen estimazio non gorde nahi den adierazten duen path-a
+			- pathData => Datuen jatorri path-a
+			- pathHiztegia => Hiztegi berria non gorde nahi den adierazten duen path-a
+			
+	+ { Instances } merge(Instances data1, Instances data2)
+	
+		-> Deskripzioa: Bi datu-sorta ezberdin (Instances formatuan) bateratzen ditu bakar gisa itzuliz.
+		-> Aurrebaldintzak: Emandako datu-sortak ez hutsak izatea.
+		-> Postbaldintzak: Emandako data1 eta data2 bateratuko dira, emaitza bakarra itzuliz.
+		-> Paramatroak:
+			- data1 => Bateratu nahi den lehen datu-sorta
+			- data2 => Bateratu nahi den bigarren datu-sorta
+			
+	Main FLUXUA (GetModel.jar): 
+		
+		- ARGUMENTUAK: 
+			0- trainBOWFSS // train_BoW_FSS datu-sorta adierazten duen path-a
+		 	1- DevBOWFSS // dev_BoW_FSS datu-sorta adierazten duen path-a
+		 	2- .model // modelo non gorde nahi den
+		 	3- evaluation.txt // ebaluazioaren emaitzak non gorde
+		 	4- data.arff // data_raw non dagoen
+		 	5- Hiztegi FSS // erabiliko den hiztegia non dagoen
+		
+		- FLUXUA:
+			Hasierako bi argumentuetatik DataSource motako bi instantzia sortuko dira, ondoren bakiotzerako Instances motakoak sortzeko. Bi instantzia hauekin
+			eta beste argumentu guztiekin, inferentzia() metodoari deituko zaio eta barnean, beharrezko prozesu guztiaz aurrera eramango dira.
