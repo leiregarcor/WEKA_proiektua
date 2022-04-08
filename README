@@ -3,7 +3,7 @@ Programaren erabilpenerako baliagarriak izango diren aholku eta iruzkinak aipatu
 1- Aurreprozesamendua:
 
 	
-	Main FLUXUA (Aurre.jar): 
+	Main FLUXUA (Aurreprozesamendua.jar): 
 		
 		- ARGUMENTUAK: 
 			0- csv_orginala // .csv fitxategiaren path-a
@@ -22,12 +22,12 @@ Programaren erabilpenerako baliagarriak izango diren aholku eta iruzkinak aipatu
 			hizt_berri pasako zaizkio. Honela, bi datu sortak BoW eta FSS jasango dute, azkeniko emandako path-etan gorde ahal izateko.
 		
 		- EXEKUZIO ADB:
-			$ java -jar path/to/sailkapena.jar path/to/data/data_og.csv path/to/data/data.arff path/to/data/data_garbi.csv path/to/data/hiztegi.txt path/to/data/train_BoW_FSS.arff path/to/data/test_BoW_FSS.arff path/to/data/hiztB.txt
+			$ java -jar path/to/Aurreprozesamendua.jar path/to/data/data_og.csv path/to/data/data.arff path/to/data/data_garbi.csv path/to/data/hiztegi.txt path/to/data/train_BoW_FSS.arff path/to/data/test_BoW_FSS.arff path/to/data/hiztB.txt
 
 		
-2- Inferentzia:
+2- Sailkapena:
 
-	Main FLUXUA (sailkapena.jar): 
+	Main FLUXUA (Sailkapena.jar): 
 		
 		- ARGUMENTUAK: 
 			0- .model // modeloa non gordeko den
@@ -43,12 +43,33 @@ Programaren erabilpenerako baliagarriak izango diren aholku eta iruzkinak aipatu
 			Horretaz gain, datu-sortak zekarren arazoak sahiesteko hainbat atributu berrizendatuko dira.
 
 		- EXEKUZIO ADB:
-			$ java -jar path/to/sailkapena.jar path/to/model/SMO_inf.model path/to/data/testBlind.csv path/to/model/iragarpen.txt path/to/data/hiztegiF.txt path/to/data/test_blind.arff path/to/data/garbia.csv
+			$ java -jar path/to/Sailkapena.jar path/to/model/SMO_inf.model path/to/data/testBlind.csv path/to/model/iragarpen.txt path/to/data/hiztegiF.txt path/to/data/test_blind.arff path/to/data/garbia.csv
 
 
-3- Ekorketa:
+3- Baseline:
 		
-	Main FLUXUA (GetModel.jar): 
+	Main FLUXUA (Baseline.jar): 
+		
+		- ARGUMENTUAK: 
+			0- trainBOWFSS // BoW eta FSS aplikaturiko train datu-sorta
+			1- DevBOWFSS // BoW eta FSS aplikaturiko dev datu-sorta
+		 	2- evaluation.txt // ebaluazioaren emaitza non gorde nahi diren
+		 	3- predictions.txt // iragarpenak non gorde nahi diren
+		 	4- trainDev // bi datu-sorte bilketa non gorde nahi den
+		
+		- FLUXUA:
+			Naive Bayes entrenatuko da Aurre klasean sortutako train datu-sortaren bitartez eta Aurre klasean sortutako dev datu-sortarekin testeatuko da
+			parametro ekorketarik egin gabe lor daitekeen f-measure, pctcorrect eta predikzioak lortzearren, kalitatearen behe borne bat izateko. Horretarako,
+			datu-sorta biak kargatu dira Instances motako instantzia banan, eta NaiveBayes-en bidez ebaluazio eskema ezberdinekin lorturiko emaitzak emango dira,
+			10-fold cross validation, hold-out eta ebaluazio ez-zintzoa, hain zuzen ere.
+			
+		- EXEKUZIO ADB:
+			$ java -jar path/to/Baseline.jar path/to/data/va_trainBoW_FSS.arff path/to/data/va_DevBoW_FSS.arff path/to/model/eval.txt path/to/model/iragarpenak.txt path/to/data/bilketa.arff
+
+
+4- Ekorketa:
+		
+	Main FLUXUA (Ekorketa.jar): 
 		
 		- ARGUMENTUAK: 
 			0- trainBOWFSS // train_BoW_FSS datu-sorta adierazten duen path-a
@@ -57,30 +78,14 @@ Programaren erabilpenerako baliagarriak izango diren aholku eta iruzkinak aipatu
 		 	3- evaluation.txt // ebaluazioaren emaitzak non gorde
 		 	4- data.arff // data_raw non dagoen
 		 	5- Hiztegi FSS // erabiliko den hiztegia non dagoen
+			6- TrainDev gorde // bi datu-sorten bilketa non gorde
 		
-		- FLUXUA:
+		- FLUXUA: 
 			Hasierako bi argumentuetatik DataSource motako bi instantzia sortuko dira, ondoren bakiotzerako Instances motakoak sortzeko. Bi instantzia hauekin
-			eta beste argumentu guztiekin, inferentzia() metodoari deituko zaio eta barnean, beharrezko prozesu guztiaz aurrera eramango dira.
+			eta beste argumentu guztiekin, inferentzia() metodoari deituko zaio eta barnean, beharrezko prozesu guztia aurrera eramango dira. Metodo honen bidez,
+			datu-sortako klase minoritarioa topatuko da lehenik klase ezberdinen maiztasunak beatuz. Hau, ekorketa klase minoritarioaren f-measurearekiko egingo 
+			delako da. Irizpide honen bidez, SMO-ren kernel ezberdinen eta hauek erabiltzen dituzten parametroen artean ekorketa prozesu bat emango da balio 
+			optimoak topatzeko. Optimo hauek lortutakoan modeloa, kalitatearen estimazioa eta datu ezberdinak gordeko dira
 			
-		- EXEKUZIO ADB:
-			$ java -jar path/to/GetModel.jar path/to/data/va_trainBoW_FSS.arff path/to/data/va_DevBoW_FSS.arff path/to/model/SMO.model path/to/model/ebaluazio.txt path/to/data/data_raw.arff path/to/data/va_DevBoW_FSS.arff path/to/data/hiztegi.txt
-
-
-3- BASELINE:
-		
-	Main FLUXUA (Baseline.jar): 
-		
-		- ARGUMENTUAK: XXXX
-			0- trainBOWFSS // train_BoW_FSS datu-sorta adierazten duen path-a
-		 	1- DevBOWFSS // dev_BoW_FSS datu-sorta adierazten duen path-a
-		 	2- .model // modelo non gorde nahi den
-		 	3- evaluation.txt // ebaluazioaren emaitzak non gorde
-		 	4- data.arff // data_raw non dagoen
-		 	5- Hiztegi FSS // erabiliko den hiztegia non dagoen
-		
-		- FLUXUA: XXXX
-			Hasierako bi argumentuetatik DataSource motako bi instantzia sortuko dira, ondoren bakiotzerako Instances motakoak sortzeko. Bi instantzia hauekin
-			eta beste argumentu guztiekin, inferentzia() metodoari deituko zaio eta barnean, beharrezko prozesu guztiaz aurrera eramango dira.
-			
-		- EXEKUZIO ADB: XXXX
-			$ java -jar path/to/GetModel.jar path/to/data/va_trainBoW_FSS.arff path/to/data/va_DevBoW_FSS.arff path/to/model/SMO.model path/to/model/ebaluazio.txt path/to/data/data_raw.arff path/to/data/va_DevBoW_FSS.arff path/to/data/hiztegi.txt
+		- EXEKUZIO ADB: 
+			$ java -jar path/to/Ekorketa.jar path/to/data/va_trainBoW_FSS.arff path/to/data/va_DevBoW_FSS.arff path/to/model/SMO.model path/to/model/ebaluazio.txt path/to/data/data_raw.arff path/to/data/histegiF.txt path/to/data/osoa.arff
