@@ -34,8 +34,18 @@ import weka.filters.unsupervised.attribute.Reorder;
 import weka.filters.unsupervised.attribute.ReplaceWithMissingValue;
 import weka.filters.unsupervised.attribute.StringToWordVector;
 
+/**
+ * Klase honetan .csv datu sorta bat .arff-ra bihurtu, bitan zatitu eta zatiei BOW eta AttributeSelection aplikatzen zaie parametro ekorketa egiteko prest utziz
+ * @author aitor
+ * @author andoni
+ * @author leire
+ */
 public class Aurre {
 	
+	/**
+	 * @param args exekutagarria deitzean terminalean sartutako balioak 
+	 * @throws Exception
+	 */
 	public static void main(String[] args) throws Exception {
 		
 		/*Argumentuak:
@@ -73,6 +83,13 @@ public class Aurre {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	
 	// -- .csv fitxategi bat .arff-ra bihurtzeko metodoa --
+	/**
+	 * Metodo honek, .csv fitxategi bat .arff formatura bilakatzen du.
+	 * @param csv_a	Bihurtu nahi den .csv fitxategiaren path // ADB{ /home/andoni/weka/fitx/data.csv }
+	 * @param j_path csv_a parametroan pasa den path berbera, baina .arff bukaerarekin // ADB{ /home/andoni/weka/fitx/data.arff }
+	 * @param h_path Bihurketaren emaitzaren path-a // ADB{ /home/andoni/weka/datuak/data_bihur.arff } 
+	 * @throws Exception
+	 */
 	public static void bihurketa(String csv_a ,String j_path, String h_path) throws Exception {
 		//Parametroak:
 		// --> csv_a: .csv fitxategiaren path-a
@@ -109,6 +126,12 @@ public class Aurre {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	
 	// -- Datu sorta osoa, stratified hold-out baten bidez bi multzotan (train eta dev) zatitu --
+	/**
+	 * Datu sorta bat duen Instances klaseko instantzia bat emanda, stratified hold-out bidez bi multzotan banatuko ditu (train eta dev).
+	 * @param datuak nstances klaseko instantzia, non path-a .arff formatuko fitxategi bat den // ADB{ /home/andoni/weka/datuak/data_bihur.arff }
+	 * @return Metodoak bi datu sortak (train eta dev) bere barnean dituen array bat itzuliko du.
+	 * @throws Exception
+	 */
 	public static Instances[] zatiketa(Instances datuak) throws Exception {
 		StratifiedRemoveFolds srf = new StratifiedRemoveFolds();
 		srf.setInputFormat(datuak);
@@ -145,6 +168,13 @@ public class Aurre {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	
 	// -- Emandako bi multzoak BoW formatura bilakatzen ditu --
+	/**
+	 * Emandako datu sorta, StringToWordVector-en bitartez BagOfWords formatura bilakatuko eta honen hiztegia emandako path-ean gordeko du.
+	 * @param train_raw Entrenamendu datu sorta duen Instances klaseko instantzia bera.
+	 * @param hiztegi_path Train_raw datu sorta BagOfWords formatura bilakatutakoan lortuko den hiztegia non gorde nahi den.
+	 * @return BagOfWords formatuko datu sorta itzuliko du eta emandako path-ean honen hiztegia gordeko da.
+	 * @throws Exception
+	 */
 	public static Instances bagOfWords(Instances train_raw, String hiztegi_path) throws Exception {
 		
 		System.out.println("Train_raw-ren atributu kop: " + train_raw.numAttributes());
@@ -199,6 +229,18 @@ public class Aurre {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	
 	// -- 
+	/**
+	 * Bi datu-sorta emanda, lehenik train_bow-ri FSS aplikatuko zaio ebaluatzaile gisa InfoGain ezarriz. Behin train_bow_fss lortuta, honen
+	 * atributuak hiztegia path-ean emandakoarekin konparatuko da, fitxategia bilakatuz. Hau da, hiztegitik FSS ostean train_bow_fss-en dauden atributuak
+	 * soilik utzita bere barnean. Horrela, dev_raw FixedStringToWordVector bitartez hiztegiberria-rekin, bag of words formatura bilakatuko dugu, eta
+	 * AttributeSelection ere dagoeneko eginda. Bukaeran, BoW eta FSS jasan duten bi datu sortak itzuliko dira.
+	 * @param train_bow FSS aplikatuko nahi zaion entrenamendu datu-sorta duen Instances klaseko instantzia bera.
+	 * @param dev_raw BoW eta FSS aplikatuko nahi zaion test datu sorta duen Instances klaseko instantzia bera.
+	 * @param hiztegia train_bow-tik lorturiko hiztegiaren path-a.
+	 * @param hiztegiberria dev_raw-ko datuak BoW formatura bilakatzeko erabiliko den hiztegia non gordeko den adierazten duen path-a.
+	 * @return Emandako datu sortentzat atributu optimoen hautaketa eta besteen ezabaketa duten datu sortak itzuliko ditu.
+	 * @throws Exception
+	 */
 	public static Instances[] featureSS(Instances train_bow, Instances dev_raw, String hiztegia, String hiztegiberria) throws Exception {
 		
 		System.out.println(train_bow.classIndex());

@@ -15,8 +15,19 @@ import weka.filters.unsupervised.attribute.NominalToString;
 import weka.filters.unsupervised.attribute.RenameAttribute;
 import weka.filters.unsupervised.attribute.Reorder;
 
+/**
+ * Klase honek GetModel klasean sortutako .model-a kargatzea, emandako bigarren .csv datu sortari preprocess aplikatzea
+ * eta datu-sorta horrekin .model-a ebaluatzea eta iragarpenak gordetzea da.
+ * @author aitor
+ * @author andoni
+ * @author leire
+ */
 public class sailkapena {
 
+	/**
+	 * @param args exekutagarria deitzean terminalean sartutako balioak
+	 * @throws Exception
+	 */
 	public static void main(String[] args) throws Exception {
 		/*Argumentuak:
 		 0- .model

@@ -10,10 +10,22 @@ import weka.classifiers.evaluation.Prediction;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 
+/**
+ * Klase honetan Naive Bayes entrenatuko da Aurre klasean sortutako train datu-sortaren bitartez
+ * eta Aurre klasean sortutako dev datu-sortarekin testeatuko da parametro ekorketarik
+ * egin gabe lor daitekeen f-measure, pctcorrect eta predikzioak lortzearren, kalitatearen behe borne bat izateko
+ * @author aitor
+ * @author andoni
+ * @author leire
+ */
 public class baseline {
 	
 	static long startTime = System.nanoTime();
 
+	/**
+	 * @param args exekutagarria deitzean terminalean sartutako balioak 
+	 * @throws Exception
+	 */
 	public static void main(String[] args) throws Exception {
 		
 		/*Argumentuak:

@@ -23,7 +23,19 @@ import weka.classifiers.functions.supportVector.PolyKernel;
 import weka.classifiers.functions.supportVector.Puk;
 import weka.classifiers.functions.supportVector.RBFKernel;
 
+/**
+ * Klase honetan Aurre klasean sortutako train eta dev datu-sorten bitartez SMO algoritmoaren parametroak ekortu
+ * egingo dira optimoak (f-measure altuena dutenak) lortzeko eta lortu ostean train+dev-ekin SMO.model entrenatu, ebaluatu
+ * eta gorde egingo da
+ * @author aitor
+ * @author andoni
+ * @author leire
+ */
 public class GetModel {
+	/**
+	 * @param args exekutagarria deitzean terminalean sartutako balioak
+	 * @throws Exception
+	 */
 	public static void main(String[] args) throws Exception {
 		
 		/*Argumentuak:
@@ -54,6 +66,18 @@ public class GetModel {
 
 	}
 	
+	/**
+	 * Metodo honen bidez, datu-sortako klase minoritarioa topatuko da lehenik klase ezberdinen maiztasunak beatuz. Hau, ekorketa klase
+	 * minoritarioaren f-measurearekiko egingo delako da. Irizpide honen bidez, kernel ezberdinen eta hauek erabiltzen dituzten parametroen artean
+	 * ekorketa prozesu bat emango da balio optimoak topatzeko. Optimo hauek lortutakoan modeloa, kalitatearen estimazioa eta datu ezberdinak gordeko dira.
+	 * @param data_BOW_FSS Train datu-sorta instantzia 
+	 * @param dev_BOW_FSS Dev datu_sorta instanzia
+	 * @param pathModel Modeloa non gorde nahi den adierazten duen path-a
+	 * @param path_kalitate Kalitatearen estimazio non gorde nahi den adierazten duen path-a
+	 * @param pathData Zatiketa egin baino lehen datu sortaren path-a
+	 * @param pathHiztegia Hiztegi berria gordeta dagoen path-a
+	 * @throws Exception
+	 */
 	public static void inferentzia(Instances data_BOW_FSS, Instances dev_BOW_FSS, String pathModel, String path_kalitate, String pathData, String pathHiztegia) throws Exception {
 		
 		// Ekorketa burutzeko lehenengo klase minoriatarioa aurkitu behar dugu, hau da, ez 0 direnen artean frekuentzia minimoa duen balioa.
@@ -287,42 +311,4 @@ public class GetModel {
 		SerializationHelper.write(pathModel, model);
 		System.exit(0);
 	}
-	
-	public static Instances merge(Instances data1, Instances data2)
-            throws Exception
-        {
-            // Check where are the string attributes
-			System.out.println("Instantziak mergeatzen");
-            int asize = data1.numAttributes();
-            boolean strings_pos[] = new boolean[asize];
-            for(int i=0; i<asize; i++)
-            {
-                Attribute att = data1.attribute(i);
-                strings_pos[i] = ((att.type() == Attribute.STRING) ||
-                                  (att.type() == Attribute.NOMINAL));
-            }
-
-            // Create a new dataset
-            Instances dest = new Instances(data1);
-            dest.setRelationName(data1.relationName() + "+" + data2.relationName());
-
-            DataSource source = new DataSource(data2);
-            Instances instances = source.getStructure();
-            Instance instance = null;
-            while (source.hasMoreElements(instances)) {
-                instance = source.nextElement(instances);
-                dest.add(instance);
-
-                // Copy string attributes
-                for(int i=0; i<asize; i++) {
-                    if(strings_pos[i]) {
-                        dest.instance(dest.numInstances()-1)
-                            .setValue(i,instance.stringValue(i));
-                    }
-                }
-            }
-            System.out.println("Instantziak mergeatuta");
-            return dest;
-        }
-
 }
