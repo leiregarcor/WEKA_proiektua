@@ -1,0 +1,86 @@
+Programaren erabilpenerako baliagarriak izango diren aholku eta iruzkinak aipatuko dira dokumentu honetan.
+
+1- Aurreprozesamendua:
+
+	
+	Main FLUXUA (Aurre.jar): 
+		
+		- ARGUMENTUAK: 
+			0- csv_orginala // .csv fitxategiaren path-a
+		 	1- arff_fitx // .arff fitxategia non gorde nahi den
+		 	2- csv_garbi // .csv garbia non gorde nahi den
+			3- hiztegi // Hiztegia non gorde nahi den
+			4- train_bow_fss // BoW eta FSS jasandako train datu_sorta non gorde
+		 	5- dev_bow_fss // BoW eta FSS jasandako dev datu_sorta non gorde
+		 	6- hizt_berri // train_bow_fss-ri egokituriko hiztegia non gorde nahi den
+		
+		- FLUXUA:
+			Hasteko bihurketa() metoadri deituko zaio csv_orginala, csv_garbi-ra bilakatzeko eta hau arff formatuko arff_fitx path-ean gordetzeko. Ondoren,
+			arff_fitx-eko datu-sorta kargatuko dat Instances motako instantzia batean erabilgarri egoteko, eta jarrain, zatiketa() metodoaren bidez bitan
+			zatituko da arff_fitx. Lorturiko train instantzia, bagOfWords() metodoari pasako zaio hiztegi path-arekin batera, eta honen bidez StringToWordVector
+			aplikatuko zaio. Jarraian, featureSS() metodoa deituko da eta honi, aurreko deitik lortutako train_bow, zatiketatik lortutako dev_raw, hiztegi eta
+			hizt_berri pasako zaizkio. Honela, bi datu sortak BoW eta FSS jasango dute, azkeniko emandako path-etan gorde ahal izateko.
+		
+		- EXEKUZIO ADB:
+			$ java -jar path/to/sailkapena.jar path/to/data/data_og.csv path/to/data/data.arff path/to/data/data_garbi.csv path/to/data/hiztegi.txt path/to/data/train_BoW_FSS.arff path/to/data/test_BoW_FSS.arff path/to/data/hiztB.txt
+
+		
+2- Inferentzia:
+
+	Main FLUXUA (sailkapena.jar): 
+		
+		- ARGUMENTUAK: 
+			0- .model // modeloa non gordeko den
+			1- testBlind.csv // testblind csv fitxategiaren path-a
+		 	2- predictions.txt // iragarpenak non gordeko diren
+		 	3- HiztegiaFSS // testblind-i bihurketa egiteko hiztegiaren path-a
+		 	4- testBlind.arff // bilakatutako fitxategia non gordeko den
+		 	5- testBlindGarbia.csv // garbituriko CSV fitxategia non gorde
+		
+		- FLUXUA:
+			Hasteko, testblind aurreprozesamenduko bihurketa() metodoaren bidez ARFF formatura bilakatuko da. Jarraian, .arff fitxategi hau Instances klaseko
+			instantzia baten bidez, eta argumentuetatik lortutako hiztegiaren bidez, BoW eta FSS aplikatuko zaio eta honekin iragarpenak egingo dira emaitzak gordez.
+			Horretaz gain, datu-sortak zekarren arazoak sahiesteko hainbat atributu berrizendatuko dira.
+
+		- EXEKUZIO ADB:
+			$ java -jar path/to/sailkapena.jar path/to/model/SMO_inf.model path/to/data/testBlind.csv path/to/model/iragarpen.txt path/to/data/hiztegiF.txt path/to/data/test_blind.arff path/to/data/garbia.csv
+
+
+3- Ekorketa:
+		
+	Main FLUXUA (GetModel.jar): 
+		
+		- ARGUMENTUAK: 
+			0- trainBOWFSS // train_BoW_FSS datu-sorta adierazten duen path-a
+		 	1- DevBOWFSS // dev_BoW_FSS datu-sorta adierazten duen path-a
+		 	2- .model // modelo non gorde nahi den
+		 	3- evaluation.txt // ebaluazioaren emaitzak non gorde
+		 	4- data.arff // data_raw non dagoen
+		 	5- Hiztegi FSS // erabiliko den hiztegia non dagoen
+		
+		- FLUXUA:
+			Hasierako bi argumentuetatik DataSource motako bi instantzia sortuko dira, ondoren bakiotzerako Instances motakoak sortzeko. Bi instantzia hauekin
+			eta beste argumentu guztiekin, inferentzia() metodoari deituko zaio eta barnean, beharrezko prozesu guztiaz aurrera eramango dira.
+			
+		- EXEKUZIO ADB:
+			$ java -jar path/to/GetModel.jar path/to/data/va_trainBoW_FSS.arff path/to/data/va_DevBoW_FSS.arff path/to/model/SMO.model path/to/model/ebaluazio.txt path/to/data/data_raw.arff path/to/data/va_DevBoW_FSS.arff path/to/data/hiztegi.txt
+
+
+3- BASELINE:
+		
+	Main FLUXUA (Baseline.jar): 
+		
+		- ARGUMENTUAK: XXXX
+			0- trainBOWFSS // train_BoW_FSS datu-sorta adierazten duen path-a
+		 	1- DevBOWFSS // dev_BoW_FSS datu-sorta adierazten duen path-a
+		 	2- .model // modelo non gorde nahi den
+		 	3- evaluation.txt // ebaluazioaren emaitzak non gorde
+		 	4- data.arff // data_raw non dagoen
+		 	5- Hiztegi FSS // erabiliko den hiztegia non dagoen
+		
+		- FLUXUA: XXXX
+			Hasierako bi argumentuetatik DataSource motako bi instantzia sortuko dira, ondoren bakiotzerako Instances motakoak sortzeko. Bi instantzia hauekin
+			eta beste argumentu guztiekin, inferentzia() metodoari deituko zaio eta barnean, beharrezko prozesu guztiaz aurrera eramango dira.
+			
+		- EXEKUZIO ADB: XXXX
+			$ java -jar path/to/GetModel.jar path/to/data/va_trainBoW_FSS.arff path/to/data/va_DevBoW_FSS.arff path/to/model/SMO.model path/to/model/ebaluazio.txt path/to/data/data_raw.arff path/to/data/va_DevBoW_FSS.arff path/to/data/hiztegi.txt
