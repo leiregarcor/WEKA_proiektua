@@ -1,6 +1,7 @@
 package baseline;
 
 import java.io.FileWriter;
+import java.util.Random;
 
 import com.googlecode.jfilechooserbookmarks.core.Utils;
 
@@ -33,6 +34,7 @@ public class baseline {
 		 1- DevBOWFSS
 		 2- evaluation.txt
 		 3- predictions.txt
+		 3- trainDev
 		*/		
 		
 		DataSource dsTrain = new DataSource(args[0]);
@@ -41,13 +43,25 @@ public class baseline {
 		DataSource dsTest = new DataSource(args[1]);
 		Instances test = dsTest.getDataSet();
 		test.setClassIndex(test.numAttributes()-1);
+		DataSource dsTrainDev = new DataSource(args[4]);
+		Instances trainDev = dsTrainDev.getDataSet();
+		trainDev.setClassIndex(trainDev.numAttributes()-1);
 		
 		NaiveBayes nb = new NaiveBayes();
 		nb.buildClassifier(train);
 		
-		
+		System.out.println("Ebaluatzaileak eraikitzen");
 		Evaluation eval = new Evaluation(train);
 		eval.evaluateModel(nb, test);
+		
+		NaiveBayes nb2 = new NaiveBayes();
+		nb2.buildClassifier(trainDev);
+		
+		Evaluation eval2 = new Evaluation(trainDev);
+		eval2.crossValidateModel(nb2, trainDev, 10, new Random(1));
+		
+		Evaluation eval3 = new Evaluation(trainDev);
+		eval3.evaluateModel(nb2, trainDev);
 		
 		long endTime   = System.nanoTime();
         long totalTime = endTime - startTime;
@@ -62,17 +76,30 @@ public class baseline {
 				minClassFreq = classFreq;
 			}			
 		}
-		System.out.println(minclassIndex + "      " + minClassFreq);
-	//	int minoritarioa = weka.core.Utils.minIndex(train.attributeStats(train.classIndex()).nominalCounts);
+		//	int minoritarioa = weka.core.Utils.minIndex(train.attributeStats(train.classIndex()).nominalCounts);
 		
 		minclassIndex = 37;
 		
+		System.out.println("Ebaluazioak egiten");
+		
 		FileWriter fw = new FileWriter(args[2]);
-		fw.write("Naive bayes-en exekuzio denbora: " + totalTime/1000000 + " milisegundu.");
+		fw.write("Naive bayes-en exekuzio denbora: " + totalTime/1000000000 + " segundu.");
 		fw.write("\n");
-		fw.write("Klase minoritarioaren f-measure = " + eval.fMeasure(minclassIndex));
+		System.out.println("Hold-out");
+		fw.write("Klase minoritarioaren f-measure hold-out= " + eval.fMeasure(minclassIndex));
 		fw.write("\n");
-		fw.write("Ondo klasifikatutako instantzia ehunekoa: " + eval.pctCorrect());
+		fw.write("Ondo klasifikatutako instantzia ehunekoa hold-out: " + eval.pctCorrect());
+		fw.write("\n");
+		System.out.println("10 fold cross-validation");
+		
+		
+		fw.write("Klase minoritarioaren f-measure 10 fold cv= " + eval2.fMeasure(minclassIndex));
+		fw.write("\n");
+		fw.write("Ondo klasifikatutako instantzia ehunekoa 10 fold cv: " + eval2.pctCorrect());
+		fw.write("\n");
+		fw.write("Klase minoritarioaren f-measure ez-zintzoa= " + eval3.fMeasure(minclassIndex));
+		fw.write("\n");
+		fw.write("Ondo klasifikatutako instantzia ehunekoa ez-zintzoa: " + eval3.pctCorrect());
 		fw.write("\n");
 		fw.write(eval.toMatrixString());
 		fw.close();

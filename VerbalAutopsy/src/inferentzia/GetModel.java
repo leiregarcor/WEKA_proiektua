@@ -5,6 +5,7 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
 import weka.core.converters.ArffLoader;
+import weka.core.converters.ArffSaver;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.FixedDictionaryStringToWordVector;
@@ -36,6 +37,7 @@ public class GetModel {
 	 * @param args exekutagarria deitzean terminalean sartutako balioak
 	 * @throws Exception
 	 */
+	static long startTime = System.nanoTime();
 	public static void main(String[] args) throws Exception {
 		
 		/*Argumentuak:
@@ -45,6 +47,7 @@ public class GetModel {
 		 3- evaluation.txt
 		 4- data.arff
 		 5- Hiztegi FSS
+		 6- TrainDev gorde
 		*/
 		
 		// fitx kargatu
@@ -61,7 +64,7 @@ public class GetModel {
 		// klasea azken atributua da
 		dev.setClassIndex(dev.numAttributes()-1);
 				
-		inferentzia(train, dev, args[2],args[3], args[4], args[5]);
+		inferentzia(train, dev, args[2],args[3], args[4], args[5], args[6]);
 
 
 	}
@@ -78,7 +81,7 @@ public class GetModel {
 	 * @param pathHiztegia Hiztegi berria gordeta dagoen path-a
 	 * @throws Exception
 	 */
-	public static void inferentzia(Instances data_BOW_FSS, Instances dev_BOW_FSS, String pathModel, String path_kalitate, String pathData, String pathHiztegia) throws Exception {
+	public static void inferentzia(Instances data_BOW_FSS, Instances dev_BOW_FSS, String pathModel, String path_kalitate, String pathData, String pathHiztegia, String train_dev_path) throws Exception {
 		
 		// Ekorketa burutzeko lehenengo klase minoriatarioa aurkitu behar dugu, hau da, ez 0 direnen artean frekuentzia minimoa duen balioa.
 		// ekorketa klase minoritarioaren f-measure hobetzea du helburu, horretarako kernelak eta hauek behar dituzten parametroak aldatuko dira iterazioetan
@@ -103,6 +106,7 @@ public class GetModel {
 		double exp = 1;
 		double gamma = 1;
 		double omega = 1;
+		double pctCorrect = 0;
 		Kernel kernelOpt = null;
 
 		
@@ -133,11 +137,11 @@ public class GetModel {
 					ev.evaluateModel(model, dev_BOW_FSS);
 
 					aux = ev.fMeasure(minclassIndex);
-					System.out.println("exponentea: " + i + "; fmeasure: " + aux);
 					if (fmeasure < aux) {
 						fmeasure = aux;
 						exp = i;
 						kernelOpt = k;
+						pctCorrect = ev.pctCorrect();
 					}
 				}
 
@@ -162,11 +166,11 @@ public class GetModel {
 					ev.evaluateModel(model, dev_BOW_FSS);
 
 					aux = ev.fMeasure(minclassIndex);
-					System.out.println("gamma: " + i + "; fmeasure: " + aux);
 					if (fmeasure < aux) {
 						fmeasure = aux;
 						gamma = i;
 						kernelOpt = k;
+						pctCorrect = ev.pctCorrect();
 					}
 				}
 
@@ -193,12 +197,12 @@ public class GetModel {
 					ev.evaluateModel(model, dev_BOW_FSS);
 
 					aux = ev.fMeasure(minclassIndex);
-					System.out.println("omega: " + i + "; fmeasure: " + aux);
 
 					if (fmeasure < aux) {
 						fmeasure = aux;
 						omega = i;
 						kernelOpt = k;
+						pctCorrect = ev.pctCorrect();
 					}
 				}
 
@@ -227,6 +231,9 @@ public class GetModel {
 			ker = new Puk();
 			((Puk) ker).setOmega(omega);	
 		}
+		
+		long endTime   = System.nanoTime();
+        long totalTime = endTime - startTime;
 
 		// sailkatzailearen kalitatearen estimazioa egiteko train eta dev batera dituen dataset-a erabiliko da
 		// kalitatearen estimazioa egiteko ebaluaketa ez zintzoa eginez goi-bornea lortuko da, gero 10-fold cv ere egingo da.
@@ -278,6 +285,12 @@ public class GetModel {
 		order.setAttributeIndices("3,2,7,5,first,8-14,4,15-last,6");
         order.setInputFormat(train_dev);
         train_dev = Filter.useFilter(train_dev, order);
+        
+        ArffSaver aSaver = new ArffSaver();
+		aSaver.setInstances(train_dev);
+		File devBF = new File(train_dev_path);
+		aSaver.setFile(devBF);
+		aSaver.writeBatch();
 		
 		model = new SMO();
 		model.setKernel(ker);
@@ -286,6 +299,8 @@ public class GetModel {
 		// ebaluazio ez-zintzoa
 		System.out.println("Ebaluazio ez-zintzoa");
 		FileWriter writer = new FileWriter(path_kalitate);
+		writer.write("Algoritmoaren-en exekuzio denbora: " + totalTime/1000000000 + " segundu.");
+		writer.write("\n");
 		writer.write("\n KALITATEAREN ESTIMAZIOA, ebaluazio ez zintzoa");
 		Evaluation eva = new Evaluation(train_dev);
 		eva.evaluateModel(model, train_dev);
@@ -302,7 +317,13 @@ public class GetModel {
 		writer.write("\nKlase minoritarioren f-measure: " + eva2.fMeasure(minclassIndex));
 		writer.write("\nOndo klasifikatutako instantzia ehunekoa: " + eva2.pctCorrect());
 		System.out.println("10 fold cross-validation bukatuta");
-
+		
+		System.out.println("Hold out train vs dev");
+		writer.write("\n KALITATEAREN ESTIMAZIOA, hold out train vs dev ebaluazio eskema");
+		writer.write("\nKlase minoritarioren f-measure: " + fmeasure);
+		writer.write("\nOndo klasifikatutako instantzia ehunekoa: " + pctCorrect);
+		System.out.println("Hold out bukatuta");
+		
 
 		writer.close();
 		System.out.println("Ebaluazioa eginda eta idatzita.");

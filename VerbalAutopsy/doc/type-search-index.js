@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes","u":"allclasses-index.html"},{"p":"aurreprozesamendua","l":"Aurre"},{"p":"baseline","l":"baseline"},{"p":"inferentzia","l":"GetModel"},{"p":"sailkapena","l":"sailkapena"}];updateSearchResults();
