@@ -57,14 +57,16 @@ public class baseline {
 		NaiveBayes nb2 = new NaiveBayes();
 		nb2.buildClassifier(trainDev);
 		
+		long endTime   = System.nanoTime();
+        long totalTime = endTime - startTime;
+        
 		Evaluation eval2 = new Evaluation(trainDev);
 		eval2.crossValidateModel(nb2, trainDev, 10, new Random(1));
 		
 		Evaluation eval3 = new Evaluation(trainDev);
 		eval3.evaluateModel(nb2, trainDev);
 		
-		long endTime   = System.nanoTime();
-        long totalTime = endTime - startTime;
+		
         int minclassIndex = 0; // adib lehenengoa
 		int minClassFreq =  train.numInstances(); // balio altuenaerkin hasieratu
 			

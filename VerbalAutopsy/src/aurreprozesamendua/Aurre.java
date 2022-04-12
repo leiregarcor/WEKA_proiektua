@@ -197,13 +197,13 @@ public class Aurre {
 		dataTrainRawStr = Filter.useFilter(dataTrainRawStr, ra);
 		
 		ra = new RenameAttribute();
-		ra.setAttributeIndices("4");
+		ra.setAttributeIndices("5");
 		ra.setReplace("siteAttr");
 		ra.setInputFormat(dataTrainRawStr);
 		dataTrainRawStr = Filter.useFilter(dataTrainRawStr, ra);
 		
 		ra = new RenameAttribute();
-		ra.setAttributeIndices("5");
+		ra.setAttributeIndices("4");
 		ra.setReplace("sexAttr");
 		ra.setInputFormat(dataTrainRawStr);
 		dataTrainRawStr = Filter.useFilter(dataTrainRawStr, ra);
@@ -306,13 +306,13 @@ public class Aurre {
 		dataDevRawStr = Filter.useFilter(dataDevRawStr, ra);
 		
 		ra = new RenameAttribute();
-		ra.setAttributeIndices("4");
+		ra.setAttributeIndices("5");
 		ra.setReplace("siteAttr");
 		ra.setInputFormat(dataDevRawStr);
 		dataDevRawStr = Filter.useFilter(dataDevRawStr, ra);
 		
 		ra = new RenameAttribute();
-		ra.setAttributeIndices("5");
+		ra.setAttributeIndices("4");
 		ra.setReplace("sexAttr");
 		ra.setInputFormat(dataDevRawStr);
 		dataDevRawStr = Filter.useFilter(dataDevRawStr, ra);

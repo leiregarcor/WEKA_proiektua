@@ -260,13 +260,13 @@ public class GetModel {
 		train_dev = Filter.useFilter(train_dev, ra);
 		
 		ra = new RenameAttribute();
-		ra.setAttributeIndices("4");
+		ra.setAttributeIndices("5");
 		ra.setReplace("siteAttr");
 		ra.setInputFormat(train_dev);
 		train_dev = Filter.useFilter(train_dev, ra);
 		
 		ra = new RenameAttribute();
-		ra.setAttributeIndices("5");
+		ra.setAttributeIndices("4");
 		ra.setReplace("sexAttr");
 		ra.setInputFormat(train_dev);
 		train_dev = Filter.useFilter(train_dev, ra);		
