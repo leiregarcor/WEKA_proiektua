@@ -94,6 +94,9 @@ public class demo {
 		fw.write("SMO-ren iragarpenak: ");
 		int instantzia = 1;
 		for (Prediction p:eval.predictions()) {
+			System.out.println("##########################################");
+			System.out.println(instantzia+" Predicted value: "+p.predicted()+ ", hau da, " + trainDev.attribute(trainDev.numAttributes()-1).value((int)p.predicted()));
+			System.out.println("##########################################");
 			fw.write("\n"+instantzia+" Predicted value: "+p.predicted()+ ", hau da, " + trainDev.attribute(trainDev.numAttributes()-1).value((int)p.predicted())); 
 			instantzia++;
 		}
